@@ -14,7 +14,7 @@ You'll give a team of 3 AI agents a real feature request, watch them break it do
 ## Setup
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/ktundwal/notify-service.git
 cd notify-service
 npm install
 ```
