@@ -327,7 +327,7 @@ describe('Acceptance: Product Owner Spec', () => {
   let spec: string;
 
   beforeEach(() => {
-    const specPath = path.join(process.cwd(), 'docs', 'ux-spec.md');
+    const specPath = path.join(process.cwd(), 'demo-artifacts', 'ux-spec.md');
     spec = fs.readFileSync(specPath, 'utf-8');
   });
 

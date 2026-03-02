@@ -152,7 +152,7 @@ As each agent finishes, it messages the lead.
 
 **Phase 5 — Integration + Docs + UX (~2-3 min)**
 Task #4 unblocks. The lead wires auth + rate limiter into server.ts. Then tasks #6 (librarian) and #7 (PO) unblock — CLAUDE.md gets updated and the PO writes a UX spec. Then task #8 (dashboard dev) unblocks and implements the PO's requirements.
-- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `EDIT CLAUDE.md`, then `WRITE docs/ux-spec.md`, then `EDIT src/public/index.html`
+- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `EDIT CLAUDE.md`, then `WRITE demo-artifacts/ux-spec.md`, then `EDIT src/public/index.html`
 
 **Phase 6 — Verification (~1 min)**
 The lead runs `npm run verify`.
@@ -213,7 +213,7 @@ This reverts all file changes, removes files created by agents, and clears the a
 | Work item closed, PR merged | TaskUpdate → completed |
 | Blocked items unblock | blockedBy dependencies resolve |
 | Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
-| PO writes UX spec, dev implements | PO writes docs/ux-spec.md → dev updates index.html |
+| PO writes UX spec, dev implements | PO writes demo-artifacts/ux-spec.md → dev updates index.html |
 | CI pipeline runs green | `npm run verify` passes |
 
 ### Six concepts to take away

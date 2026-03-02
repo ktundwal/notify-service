@@ -28,7 +28,7 @@ notify-service is a Teams-style notification hub. Attendees paste a prompt into 
 **After wiring (sequential tasks):**
 
 5. **Librarian** — Updates `CLAUDE.md` with new endpoints and architecture.
-6. **Product owner** — Reviews the dashboard (`src/public/index.html`) and writes a UX spec (`docs/ux-spec.md`) with requirements and acceptance criteria.
+6. **Product owner** — Reviews the dashboard (`src/public/index.html`) and writes a UX spec (`demo-artifacts/ux-spec.md`) with requirements and acceptance criteria.
 7. **Dashboard dev** — Reads the PO's spec and implements the requirements in `index.html`. Blocked by #6.
 
 **Optional:** Cross-model review via `/crossmodel-review` using Copilot CLI (Google + OpenAI models review the code).
@@ -100,7 +100,7 @@ This is the core teaching point. Everything maps 1:1:
 | Dev posts in team channel | `SendMessage` → lead |
 | Acceptance criteria in ADO item | `tests/acceptance.test.ts` |
 | Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
-| PO writes UX spec, dev implements | PO writes docs/ux-spec.md → dev updates index.html |
+| PO writes UX spec, dev implements | PO writes demo-artifacts/ux-spec.md → dev updates index.html |
 | Ticket closed, PR merged | `TaskUpdate` → completed |
 | Blocked items unblock | `blockedBy` dependencies resolve |
 | CI runs green | `npm run verify` passes |
@@ -164,7 +164,7 @@ The agents' code exists but doesn't match the spec. The test error messages say 
 
 ### "The on-call / librarian / PO tests fail"
 
-These test for file artifacts (docs/oncall-playbook.md, CLAUDE.md updates, docs/ux-spec.md). Check:
+These test for file artifacts (docs/oncall-playbook.md, CLAUDE.md updates, demo-artifacts/ux-spec.md). Check:
 - Does the file exist? (`ls docs/`)
 - Does it contain the expected content? (read the test expectations in `acceptance.test.ts`)
 - The agent responsible may not have run yet — check task status in Terminal 2

@@ -57,7 +57,7 @@ The librarian task runs after features are wired and updates CLAUDE.md with new 
 
 ### 6. PO→Dev Handoff = Cross-Role Collaboration
 
-The PO agent writes a UX spec (`docs/ux-spec.md`) after features are wired. Then a dev agent reads the spec and implements the requirements in `src/public/index.html`. The spec is the contract — same as your product team's workflow.
+The PO agent writes a UX spec (`demo-artifacts/ux-spec.md`) after features are wired. Then a dev agent reads the spec and implements the requirements in `src/public/index.html`. The spec is the contract — same as your product team's workflow.
 
 **Human parallel:** Your PO writes a spec with acceptance criteria. Your dev builds to that spec. The spec is the handoff artifact — not a Slack thread, not a meeting.
 
@@ -260,7 +260,7 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 17:44:43  TASK→    #6 in_progress
 17:44:43  TASK→    #7 in_progress
 17:44:45  EDIT     CLAUDE.md
-17:44:47  WRITE    docs/ux-spec.md
+17:44:47  WRITE    demo-artifacts/ux-spec.md
 17:44:50  TASK✓    #7 completed
 17:44:51  TASK→    #8 in_progress
 17:44:55  EDIT     src/public/index.html
@@ -305,6 +305,15 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 
 **If the review is clean:** "Clean review. The agents wrote solid code. But the value is in the *process* — you now have evidence that two independent models agree. That's stronger than one model saying 'looks good to me.'"
 
+**If Copilot CLI isn't available:** Show the sample artifact instead:
+
+> "We have a real review from a previous run. Let me show you what it looks like."
+
+Open `docs/examples/crossmodel-review-sample.md` and walk through the summary table. Point out:
+- 3 findings where both models agreed (high confidence)
+- 5 where they disagreed (human judgment needed)
+- The lead's assessment column — "It didn't blindly accept every finding. It reasoned over them: 'hardcoded keys are intentional for the tutorial, memory leak is real, timing attack is out of scope.' Same as you reading PR comments — you don't merge every suggestion."
+
 ---
 
 ## The 1:1 Mapping (Recap Slide)
@@ -318,7 +327,7 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 | 3 devs + 1 on-call work simultaneously | 4 agents editing different files |
 | On-call writes runbook from ticket | On-call agent writes playbook from acceptance tests |
 | Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
-| PO writes UX spec, dev implements | PO writes docs/ux-spec.md → dev updates index.html |
+| PO writes UX spec, dev implements | PO writes demo-artifacts/ux-spec.md → dev updates index.html |
 | Dev posts in team channel | SendMessage → lead |
 | Acceptance criteria in ticket | tests/acceptance.test.ts (human-written) |
 | Ticket closed, PR merged | TaskUpdate → completed, worktree merged |
