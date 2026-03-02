@@ -10,4 +10,6 @@ Add three features and an operational playbook to this notification service. Cre
 
 After all three features are implemented, wire the auth middleware and rate limiter into server.ts. The on-call playbook runs in parallel with the feature work — it doesn't depend on the feature agents and they don't depend on it.
 
+Optional — cross-model review: If GitHub Copilot CLI is installed (`copilot --version`), run /crossmodel-review on src/middleware/auth.ts, src/services/rate-limiter.ts, and src/routes/stats.ts to get a second opinion from Google and OpenAI models. Reason over the feedback — fix real issues, document why you disagree with false positives. Skip this step if Copilot CLI is not available.
+
 Definition of done: run npm run verify — type check AND all tests must pass, including tests/acceptance.test.ts which contains pre-written acceptance tests that validate the exact behavior specified above. Do not modify acceptance.test.ts.

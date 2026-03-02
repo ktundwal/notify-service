@@ -145,36 +145,7 @@ Then run the acceptance tests to show they fail:
 
 Now paste this into Claude Code. Full text in `demo/prompt.txt`.
 
-```
-Add three features to this notification service. Create a team of 3 agents
-to work in parallel. Each agent should work in its own git worktree to
-avoid conflicts.
-
-1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key
-   header on all /webhooks routes. Valid keys: ["notify-dev-key",
-   "notify-prod-key"]. Return 401 JSON error for missing or invalid keys.
-   Write unit tests in tests/auth.test.ts.
-
-2. Rate limiter — Create src/services/rate-limiter.ts. In-memory sliding
-   window: max 100 requests per minute per sourceId. Export
-   createRateLimiter(maxRequests, windowMs) that returns Express middleware.
-   Apply to POST /webhooks/notify only. Return 429 with a Retry-After
-   header when exceeded. Write unit tests in tests/rate-limiter.test.ts.
-
-3. Stats endpoint — Create src/routes/stats.ts. GET /stats returns
-   notification counts grouped by channel and priority for the last hour.
-   Add a getNotificationStats(sinceMinutes) function to
-   src/storage/sqlite.ts. Register the route in server.ts. Write unit tests
-   in tests/stats.test.ts.
-
-After all three features are implemented, wire the auth middleware and rate
-limiter into server.ts.
-
-Definition of done: run npm run verify — type check AND all tests must
-pass, including tests/acceptance.test.ts which contains pre-written
-acceptance tests that validate the exact behavior specified above. Do not
-modify acceptance.test.ts.
-```
+Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playbook), wiring, optional cross-model review, and `npm run verify` as definition of done.
 
 ---
 
@@ -291,6 +262,30 @@ modify acceptance.test.ts.
 
 ---
 
+### Phase 7: Cross-Model Review *(optional)* (5:00 – 7:00)
+
+> **Skip this phase if Copilot CLI isn't installed.** The exercise is complete after Phase 6.
+
+**What Claude does:** Runs `/crossmodel-review` on each of the three feature files. Google and OpenAI models review the code independently, then the lead synthesizes the feedback.
+
+**What the audience sees:**
+```
+17:44:50  BASH     copilot --model gemini-3-pro -p "..." -s --no-color
+17:44:50  BASH     copilot --model gpt-5.2-codex -p "..." -s --no-color
+17:45:10  BASH     copilot --model gemini-3-pro -p "..." -s --no-color
+17:45:10  BASH     copilot --model gpt-5.2-codex -p "..." -s --no-color
+```
+
+**Say:** "Now it's getting a second opinion. Two different AI models — one from Google, one from OpenAI — are reviewing the code the Claude agents just wrote. Same reason you get a peer review from someone outside your team. Where they agree, high confidence. Where they disagree, that's for you to judge."
+
+**Teaching point:** Cross-model review catches blind spots. A model reviewing its own output is like grading your own homework. Different models have different strengths and failure modes. This is the AI equivalent of "get a second pair of eyes."
+
+**If the review finds real issues:** "The review caught something. Watch — the lead is fixing it and re-running verification. Same as addressing PR comments."
+
+**If the review is clean:** "Clean review. The agents wrote solid code. But the value is in the *process* — you now have evidence that two independent models agree. That's stronger than one model saying 'looks good to me.'"
+
+---
+
 ## The 1:1 Mapping (Recap Slide)
 
 | Human Team | What You Just Saw |
@@ -306,6 +301,7 @@ modify acceptance.test.ts.
 | Ticket closed, PR merged | TaskUpdate → completed, worktree merged |
 | Blocked tickets unblock | blockedBy dependencies resolve |
 | CI pipeline runs green | `npm run verify` passes (including acceptance) |
+| Peer review from another team | Cross-model review via Copilot CLI *(optional)* |
 
 ---
 
@@ -345,7 +341,7 @@ This reverts all file changes, removes untracked files, and clears the activity 
 - Restart Claude Code from the project root
 
 **Agents not spawning:**
-- The prompt explicitly says "Create a team of 3 agents." If Claude solves it alone, re-prompt: "Use a team of 3 agents to parallelize this."
+- The prompt explicitly says "Create a team of 4 agents." If Claude solves it alone, re-prompt: "Use a team of 4 agents to parallelize this — one per feature plus one for the on-call playbook."
 - Check you're on a model that supports teams (Opus or Sonnet)
 
 **Worktrees not created:**
@@ -381,5 +377,6 @@ This reverts all file changes, removes untracked files, and clears the activity 
 | Parallel work | 1:45 | 4:00 |
 | Completion + wiring | 1:00 | 5:00 |
 | Verification | 1:00 | 6:00 |
+| Cross-model review *(optional)* | 2:00 | 8:00 |
 
-Total demo time: ~6 minutes. Budget 8-10 min to account for AI variability.
+Total demo time: ~6 minutes without review, ~8 with. Budget 10 min to account for AI variability.

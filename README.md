@@ -10,6 +10,7 @@ You'll give a team of 4 AI agents a real feature request, watch them break it do
 - **Node.js** 18+ (`node --version`)
 - **jq** installed (`jq --version`) — used by the observability hooks
 - **Git** initialized (this repo)
+- **GitHub Copilot CLI** *(optional)* — enables cross-model review step (`copilot --version`)
 
 > **Note:** Agent teams is an experimental feature. This project's `.claude/settings.json` enables it automatically via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`. No extra setup needed — just clone and go.
 
@@ -140,6 +141,14 @@ The lead runs `npm run verify`.
 - Terminal 1 shows: all tests passing (including your 19 acceptance tests)
 - Terminal 2 shows: `BASH` line for the verify command
 
+**Phase 7 — Cross-model review *(optional, ~2 min)***
+If Copilot CLI is installed, the lead runs `/crossmodel-review` on each feature file.
+- Google and OpenAI models review the code independently
+- The lead synthesizes feedback: agreements are high-confidence, disagreements need human judgment
+- Real issues get fixed, false positives get documented
+
+> Skip this phase if Copilot CLI isn't available. The exercise is complete after Phase 6.
+
 ### Step 5: Inspect the results
 
 After Claude finishes, look at what was created:
@@ -225,7 +234,8 @@ notify-service/
 │   └── seed.ts                 ← populate sample data
 ├── .claude/
 │   ├── settings.json           ← hook configuration (auto-enabled)
-│   └── agents/tutor.md         ← read-only tutor agent (claude --agent tutor)
+│   ├── agents/tutor.md         ← read-only tutor agent (claude --agent tutor)
+│   └── skills/crossmodel-review/ ← optional: peer review via Copilot CLI
 ├── CLAUDE.md                   ← project context for Claude Code
 ├── deck.md                     ← Marp slide deck (tutorial)
 └── package.json
