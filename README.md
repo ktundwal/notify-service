@@ -75,6 +75,14 @@ npx vitest run tests/acceptance.test.ts
 
 You'll see 27 failures. That's the starting line.
 
+Now look at the dashboard — the UI the PO agent will review later:
+
+```bash
+npm run dev          # open http://localhost:3000 in your browser
+```
+
+Notice the stats panel shows a 404 error — the `/stats` endpoint doesn't exist yet. After agents build the features, everything lights up. Press `Ctrl+C` to stop the server when you're done looking.
+
 ### Step 2: Open three terminals side by side (1 min)
 
 ```
