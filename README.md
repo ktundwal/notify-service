@@ -11,6 +11,8 @@ You'll give a team of 3 AI agents a real feature request, watch them break it do
 - **jq** installed (`jq --version`) — used by the observability hooks
 - **Git** initialized (this repo)
 
+> **Note:** Agent teams is an experimental feature. This project's `.claude/settings.json` enables it automatically via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`. No extra setup needed — just clone and go.
+
 ## Setup
 
 ```bash
@@ -67,6 +69,8 @@ You'll see 14 failures, all saying "module not found." That's the starting line.
 │ (where agents work)   │  │ (observability)        │  │ (git worktree list)   │
 └───────────────────────┘  └───────────────────────┘  └───────────────────────┘
 ```
+
+> **Optional — Terminal 4 (Tutor):** If you get stuck, open a 4th terminal and run `claude --agent tutor`. It's a read-only helper that explains concepts, interprets the activity log, and guides debugging — without writing code for you.
 
 Split panes in iTerm2: `Cmd+D` (vertical split), then select the rightmost pane and `Cmd+D` again.
 
@@ -214,11 +218,26 @@ notify-service/
 ├── scripts/
 │   └── seed.ts                 ← populate sample data
 ├── .claude/
-│   └── settings.json           ← hook configuration (auto-enabled)
+│   ├── settings.json           ← hook configuration (auto-enabled)
+│   └── agents/tutor.md         ← read-only tutor agent (claude --agent tutor)
 ├── CLAUDE.md                   ← project context for Claude Code
 ├── deck.md                     ← Marp slide deck (tutorial)
 └── package.json
 ```
+
+## Need Help? Ask the Tutor
+
+If you're stuck at any point, open a separate terminal and run:
+
+```bash
+claude --agent tutor
+```
+
+The tutor is a read-only agent that ships with this repo. It knows the tutorial structure, can read any file, and explains what's happening — but it won't write code for you. Ask it things like:
+- "What are the 3 features being built?"
+- "What does SPAWN mean in the activity log?"
+- "My acceptance tests are failing — what should I check?"
+- "Why didn't the agents use worktrees?"
 
 ## Troubleshooting
 

@@ -74,6 +74,8 @@ Three terminals side-by-side:
 - `notify-service` project cloned with `npm install` done
 - Repo is clean (`git status` shows nothing)
 
+> Agent teams is experimental. The project's `.claude/settings.json` sets `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` automatically. If attendees clone the repo, it just works — no manual env var needed.
+
 ### Terminal 1: Claude Code
 
 ```bash
@@ -294,6 +296,20 @@ modify acceptance.test.ts.
 | CI pipeline runs green | `npm run verify` passes (including acceptance) |
 
 ---
+
+## Tutor Agent
+
+The repo ships with a read-only tutor agent (`.claude/agents/tutor.md`) that attendees can run in a 4th terminal:
+
+```bash
+claude --agent tutor
+```
+
+It knows the tutorial structure, the 3 features, the acceptance test spec, the activity log format, and common failure modes. It guides without writing code — explains concepts, interprets log entries, and suggests what to check.
+
+**When to mention it:** After the demo starts, if attendees look stuck or confused. Say: "If you're stuck, open a 4th terminal and run `claude --agent tutor`. It's a read-only helper that can answer questions about what's happening."
+
+The tutor uses Sonnet (fast, cheap) and has no write/edit/bash access — it can only read the codebase and answer questions.
 
 ## After the Demo
 
