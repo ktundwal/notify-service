@@ -318,3 +318,30 @@ describe('Acceptance: Librarian (Docs Updated)', () => {
     expect(claudeMd).toMatch(/middleware\/auth/);
   });
 });
+
+// ─── Product Review (UX) ────────────────────────────────────────
+
+describe('Acceptance: Product Review', () => {
+  let review: string;
+
+  beforeEach(() => {
+    const reviewPath = path.join(process.cwd(), 'docs', 'ux-review.md');
+    review = fs.readFileSync(reviewPath, 'utf-8');
+  });
+
+  it('docs/ux-review.md exists and is non-empty', () => {
+    expect(review.length).toBeGreaterThan(0);
+  });
+
+  it('UX review covers authentication', () => {
+    expect(review).toMatch(/auth|API key|401/i);
+  });
+
+  it('UX review covers rate limiting', () => {
+    expect(review).toMatch(/rate limit|429|throttl/i);
+  });
+
+  it('UX review covers the stats display', () => {
+    expect(review).toMatch(/stats|dashboard|channel/i);
+  });
+});

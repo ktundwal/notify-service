@@ -55,11 +55,11 @@ Before agents touch anything, look at the acceptance tests — the spec you're g
 # Read the acceptance test file
 cat tests/acceptance.test.ts
 
-# Run them — all 23 should fail (the code doesn't exist yet)
+# Run them — all 27 should fail (the code doesn't exist yet)
 npx vitest run tests/acceptance.test.ts
 ```
 
-You'll see 23 failures. That's the starting line.
+You'll see 27 failures. That's the starting line.
 
 ### Step 2: Open three terminals side by side (1 min)
 
@@ -107,6 +107,7 @@ The prompt asks Claude to:
 - A fourth agent writes an on-call playbook from the acceptance test spec
 - After all three features finish, wire everything into server.ts
 - After wiring, a librarian task updates CLAUDE.md with the new endpoints
+- After wiring, a PO agent reviews the dashboard and writes UX feedback
 - Definition of done: `npm run verify` passes, including the acceptance tests
 
 ### Step 4: Watch (5-8 min)
@@ -116,7 +117,7 @@ This is where you observe. Here's what happens and what to look for:
 **Phase 1 — Lead plans (~30s)**
 The lead agent reads CLAUDE.md, explores the codebase, then creates tasks.
 - Terminal 2 shows: `TASK+` lines (tasks being created)
-- Look for: 6 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers; #6 (librarian) blocked by #4
+- Look for: 7 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers; #6 (librarian) and #7 (PO review) blocked by #4
 
 **Phase 2 — Agents spawn (~15s)**
 Four agents start, each in its own git worktree.
@@ -133,13 +134,13 @@ As each agent finishes, it messages the lead.
 - Terminal 1 shows: completion messages with test results
 - Terminal 2 shows: `MSG` and `TASK✓` lines
 
-**Phase 5 — Integration + Docs (~1-2 min)**
-Task #4 unblocks. The lead wires auth + rate limiter into server.ts. Then task #6 (librarian) unblocks and CLAUDE.md gets updated with the new endpoints.
-- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `TASK→ #6 in_progress`, then `EDIT CLAUDE.md`
+**Phase 5 — Integration + Docs + Review (~1-2 min)**
+Task #4 unblocks. The lead wires auth + rate limiter into server.ts. Then tasks #6 (librarian) and #7 (PO review) unblock — CLAUDE.md gets updated and the dashboard gets a UX review.
+- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `EDIT CLAUDE.md`, then `WRITE docs/ux-review.md`
 
 **Phase 6 — Verification (~1 min)**
 The lead runs `npm run verify`.
-- Terminal 1 shows: all tests passing (including your 23 acceptance tests)
+- Terminal 1 shows: all tests passing (including your 27 acceptance tests)
 - Terminal 2 shows: `BASH` line for the verify command
 
 **Phase 7 — Cross-model review *(optional, ~2 min)***
@@ -177,7 +178,7 @@ To go back to the starting state and run the exercise again:
 bash demo/reset.sh
 ```
 
-This reverts all file changes, removes files created by agents, and clears the activity log. You're back to 19 tests, 23 failing acceptance tests, ready to go again.
+This reverts all file changes, removes files created by agents, and clears the activity log. You're back to 19 tests, 27 failing acceptance tests, ready to go again.
 
 ## What to Notice
 
@@ -196,9 +197,10 @@ This reverts all file changes, removes files created by agents, and clears the a
 | Work item closed, PR merged | TaskUpdate → completed |
 | Blocked items unblock | blockedBy dependencies resolve |
 | Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
+| PO reviews the UX | PO agent writes docs/ux-review.md |
 | CI pipeline runs green | `npm run verify` passes |
 
-### Five concepts to take away
+### Six concepts to take away
 
 1. **Acceptance tests = external quality gate.** Agents write their own unit tests (grading their own homework). The acceptance tests are YOUR spec — agents can't modify them, only satisfy them.
 
@@ -210,6 +212,8 @@ This reverts all file changes, removes files created by agents, and clears the a
 
 5. **Docs are part of "done".** The librarian task updates CLAUDE.md after features are wired — if the API changed and the docs didn't, the work isn't finished. The acceptance tests verify that the docs reflect the current state of the code.
 
+6. **Product review = non-coding agent role.** The PO agent reviews the dashboard from a user's perspective and writes UX feedback. Agents aren't just coders — they fill any team role that can work from text artifacts.
+
 ## Project Structure
 
 ```
@@ -217,13 +221,14 @@ notify-service/
 ├── docs/
 │   └── oncall-playbook.md      ← on-call runbook (written by agent)
 ├── src/                        ← the application code
+│   ├── public/index.html       ← notification dashboard (served at /)
 │   ├── server.ts
 │   ├── types/index.ts
 │   ├── routes/
 │   ├── services/
 │   └── storage/
 ├── tests/
-│   ├── acceptance.test.ts      ← YOUR spec (23 tests, do not modify)
+│   ├── acceptance.test.ts      ← YOUR spec (27 tests, do not modify)
 │   ├── templates.test.ts       ← existing unit tests
 │   ├── dedup.test.ts
 │   └── dispatcher.test.ts
@@ -239,7 +244,9 @@ notify-service/
 ├── .claude/
 │   ├── settings.json           ← hook configuration (auto-enabled)
 │   ├── agents/tutor.md         ← read-only tutor agent (claude --agent tutor)
-│   └── skills/crossmodel-review/ ← optional: peer review via Copilot CLI
+│   ├── skills/crossmodel-review/ ← optional: peer review via Copilot CLI
+│   ├── skills/session-learnings/ ← capture session learnings as artifacts
+│   └── skills/marp-deck/        ← create presentations via Marp CLI
 ├── CLAUDE.md                   ← project context for Claude Code
 ├── deck.md                     ← Marp slide deck (tutorial)
 └── package.json
@@ -258,6 +265,24 @@ The tutor is a read-only agent that ships with this repo. It knows the tutorial 
 - "What does SPAWN mean in the activity log?"
 - "My acceptance tests are failing — what should I check?"
 - "Why didn't the agents use worktrees?"
+
+## Capture & Share
+
+After the exercise, capture what you learned:
+
+```bash
+# In Claude Code:
+/session-learnings agent-teams-exercise
+```
+
+This produces a folder of portable artifacts:
+- **README.md** — session summary
+- **investigation-log.md** — what happened, what worked, what didn't
+- **deck.md** — Marp presentation you can share with your team
+
+The deck is presentation-ready — share it at your next team standup or brown bag. Each cohort's learnings compound when shared.
+
+> Requires the `session-learnings` and `marp-deck` skills (shipped with this repo in `.claude/skills/`). Marp CLI is installed automatically on first use.
 
 ## Troubleshooting
 

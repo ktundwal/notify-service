@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; padding: 2rem; }
+    h1 { margin-bottom: 1.5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 1200px; }
+    .card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #555; }
+    .stat { font-size: 2rem; font-weight: bold; }
+    .stat-label { font-size: 0.85rem; color: #888; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #eee; }
+    th { font-size: 0.85rem; color: #888; text-transform: uppercase; }
+    .priority-P0 { color: #dc3545; font-weight: bold; }
+    .priority-P1 { color: #fd7e14; }
+    .priority-P2 { color: #ffc107; }
+    .priority-P3 { color: #6c757d; }
+    .error { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.75rem; margin-bottom: 1rem; }
+    .send-form { display: flex; flex-direction: column; gap: 0.5rem; }
+    .send-form input, .send-form select, .send-form textarea { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
+    .send-form button { padding: 0.5rem 1rem; background: #0078d4; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    .send-form button:hover { background: #106ebe; }
+    #send-result { margin-top: 0.5rem; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Notification Dashboard</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>Stats (Last Hour)</h2>
+      <div id="stats-content"><p>Loading...</p></div>
+    </div>
+    <div class="card">
+      <h2>Send Test Notification</h2>
+      <form class="send-form" id="send-form">
+        <input type="text" name="apiKey" placeholder="API Key (X-API-Key)" required>
+        <input type="text" name="channel" placeholder="Channel" value="deployments" required>
+        <select name="priority">
+          <option value="P0">P0 — Critical</option>
+          <option value="P1">P1 — High</option>
+          <option value="P2" selected>P2 — Medium</option>
+          <option value="P3">P3 — Low</option>
+        </select>
+        <input type="text" name="title" placeholder="Title" required>
+        <textarea name="body" placeholder="Body" rows="2" required></textarea>
+        <input type="text" name="sourceId" placeholder="Source ID" value="dashboard" required>
+        <button type="submit">Send Notification</button>
+      </form>
+      <div id="send-result"></div>
+    </div>
+    <div class="card" style="grid-column: 1 / -1;">
+      <h2>Recent Notifications</h2>
+      <div id="history-content"><p>Loading...</p></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadStats() {
+      const el = document.getElementById('stats-content');
+      try {
+        const res = await fetch('/stats');
+        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+        const data = await res.json();
+        if (data.total === 0) {
+          el.innerHTML = '<p>No notifications in the last hour.</p>';
+          return;
+        }
+        let html = '<div class="stat">' + data.total + '</div><div class="stat-label">total notifications</div><br>';
+        for (const [channel, priorities] of Object.entries(data.channels)) {
+          html += '<strong>' + channel + ':</strong> ';
+          html += Object.entries(priorities).map(function(e) { return '<span class="priority-' + e[0] + '">' + e[0] + '=' + e[1] + '</span>'; }).join(', ');
+          html += '<br>';
+        }
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<div class="error">Stats unavailable: ' + e.message + '. Is the /stats endpoint built?</div>';
+      }
+    }
+
+    async function loadHistory() {
+      const el = document.getElementById('history-content');
+      try {
+        const res = await fetch('/webhooks/history?limit=20');
+        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+        const data = await res.json();
+        if (!data.length) {
+          el.innerHTML = '<p>No recent notifications.</p>';
+          return;
+        }
+        let html = '<table><tr><th>Time</th><th>Channel</th><th>Priority</th><th>Title</th><th>Source</th></tr>';
+        for (const n of data) {
+          var time = new Date(n.createdAt).toLocaleTimeString();
+          html += '<tr><td>' + time + '</td><td>' + n.channel + '</td><td class="priority-' + n.priority + '">' + n.priority + '</td><td>' + n.title + '</td><td>' + n.sourceId + '</td></tr>';
+        }
+        html += '</table>';
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = '<div class="error">History unavailable: ' + e.message + '. Is the /webhooks endpoint built?</div>';
+      }
+    }
+
+    document.getElementById('send-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var form = e.target;
+      var result = document.getElementById('send-result');
+      try {
+        var res = await fetch('/webhooks/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': form.apiKey.value },
+          body: JSON.stringify({
+            channel: form.channel.value,
+            priority: form.priority.value,
+            title: form.title.value,
+            body: form.body.value,
+            sourceId: form.sourceId.value,
+          }),
+        });
+        var data = await res.json();
+        if (res.ok) {
+          result.innerHTML = '<span style="color:green">Sent (' + res.status + ')</span>';
+          loadStats();
+          loadHistory();
+        } else if (res.status === 401) {
+          result.innerHTML = '<span style="color:red">401 Unauthorized — check your API key</span>';
+        } else if (res.status === 429) {
+          result.innerHTML = '<span style="color:orange">429 Rate limited — Retry-After: ' + res.headers.get('Retry-After') + 's</span>';
+        } else {
+          result.innerHTML = '<span style="color:red">' + res.status + ': ' + (data.error || 'Unknown error') + '</span>';
+        }
+      } catch (e) {
+        result.innerHTML = '<span style="color:red">' + e.message + '</span>';
+      }
+    });
+
+    loadStats();
+    loadHistory();
+  </script>
+</body>
+</html>
