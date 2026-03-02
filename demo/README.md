@@ -21,7 +21,7 @@ Claude Code agent teams do the exact same thing. This demo makes that visible.
 
 ---
 
-## Four Concepts Beyond "Give It a Prompt"
+## Five Concepts Beyond "Give It a Prompt"
 
 ### 1. Acceptance Tests = External Quality Gate
 
@@ -48,6 +48,12 @@ Hooks log every tool call to `agent-activity.log`. You see task creation, file e
 The on-call agent reads the acceptance tests — the spec — and writes a runbook (`docs/oncall-playbook.md`) from the contract. It doesn't wait for the feature code. Same as your on-call engineer reading the Jira ticket and updating the playbook before the feature even ships.
 
 **Human parallel:** Your on-call writes runbook entries from acceptance criteria, not from implementation details.
+
+### 5. Docs Are Part of "Done"
+
+The librarian task runs after features are wired and updates CLAUDE.md with new endpoints and architecture. If the API changed and the docs didn't, the work isn't finished. The acceptance tests verify this — they check that CLAUDE.md mentions the new endpoints.
+
+**Human parallel:** Your team's definition of done includes updating the wiki. If the docs are stale, the PR isn't mergeable.
 
 ---
 
@@ -127,7 +133,7 @@ Before you paste the prompt, show the audience the acceptance test file:
 > Read tests/acceptance.test.ts and tell me what it expects
 ```
 
-Claude will summarize: "19 acceptance tests that check auth middleware rejects bad keys, rate limiter returns 429, stats endpoint groups by channel/priority, and on-call playbook documents all three features."
+Claude will summarize: "23 acceptance tests that check auth middleware rejects bad keys, rate limiter returns 429, stats endpoint groups by channel/priority, and on-call playbook documents all three features."
 
 **Say:** "These tests were written by me, not the agents. This is the spec — same as acceptance criteria in a Jira ticket. The agents can't modify this file. They have to write code that makes it pass."
 
@@ -137,7 +143,7 @@ Then run the acceptance tests to show they fail:
 > Run npx vitest run tests/acceptance.test.ts
 ```
 
-**Say:** "19 failures. The code doesn't exist yet. The agents' job is to make these pass."
+**Say:** "23 failures. The code doesn't exist yet. The agents' job is to make these pass."
 
 ---
 
@@ -172,15 +178,16 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 17:44:01  TASK+    Add stats endpoint — counts by channel and priority
 17:44:02  TASK+    Wire auth + rate limiter into server.ts
 17:44:02  TASK+    Write on-call playbook from acceptance test spec
+17:44:02  TASK+    Librarian — update CLAUDE.md with new endpoints
 17:44:02  TASK→    #1 in_progress → agent-auth
 17:44:02  TASK→    #2 in_progress → agent-ratelimit
 17:44:02  TASK→    #3 in_progress → agent-stats
 17:44:02  TASK→    #5 in_progress → agent-oncall
 ```
 
-**Say:** "It broke the work into 5 tasks. Three features, one wiring task blocked until features are done, and an on-call playbook that runs in parallel — no blockers. That's a dependency graph — same as your sprint board."
+**Say:** "It broke the work into 6 tasks. Three features in parallel, an on-call playbook in parallel, wiring blocked until features are done, and a librarian task blocked until wiring is done. That's a dependency graph — same as your sprint board."
 
-**Teaching point:** The lead doesn't start coding — it plans first, creates the task board, then delegates. The on-call task has no dependencies — it reads the spec, not the implementation.
+**Teaching point:** The lead doesn't start coding — it plans first, creates the task board, then delegates. Notice the dependency chain: features → wiring → librarian. The on-call task has no dependencies — it reads the spec, not the implementation.
 
 ---
 
@@ -243,9 +250,12 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 17:44:35  TASK✓    #3 completed
 17:44:36  TASK→    #4 in_progress
 17:44:40  EDIT     src/server.ts
+17:44:42  TASK✓    #4 completed
+17:44:43  TASK→    #6 in_progress
+17:44:45  EDIT     CLAUDE.md
 ```
 
-**Say:** "Notice the on-call playbook finished first — it had no dependencies, just reading the spec and writing docs. All three features done. The wiring task just unblocked. Now it's integrating into server.ts — importing the middleware, mounting the routes. This is the merge step."
+**Say:** "Notice the on-call playbook finished first — it had no dependencies, just reading the spec and writing docs. All three features done. The wiring task just unblocked. Now it's integrating into server.ts — importing the middleware, mounting the routes. This is the merge step. And watch — after wiring completes, the librarian task unblocks. It'll update CLAUDE.md with the new endpoints."
 
 ---
 
@@ -258,7 +268,7 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 17:44:45  BASH     Run verification: tsc + vitest
 ```
 
-**Say:** "Definition of done. Type check passes, their unit tests pass, AND the acceptance tests I wrote pass. 19 acceptance tests that I wrote before the agents started — including 5 that verify the on-call playbook. They didn't modify the spec — they wrote code and docs that satisfy it. Same as your QA team signing off."
+**Say:** "Definition of done. Type check passes, their unit tests pass, AND the acceptance tests I wrote pass. 23 acceptance tests that I wrote before the agents started — including 5 for the on-call playbook and 4 that verify the librarian updated CLAUDE.md. They didn't modify the spec — they wrote code and docs that satisfy it. Same as your QA team signing off."
 
 ---
 
@@ -296,6 +306,7 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 | Each dev gets a feature branch | Each agent gets a git worktree |
 | 3 devs + 1 on-call work simultaneously | 4 agents editing different files |
 | On-call writes runbook from ticket | On-call agent writes playbook from acceptance tests |
+| Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
 | Dev posts in team channel | SendMessage → lead |
 | Acceptance criteria in ticket | tests/acceptance.test.ts (human-written) |
 | Ticket closed, PR merged | TaskUpdate → completed, worktree merged |

@@ -1,4 +1,4 @@
-Add three features and an operational playbook to this notification service. Create a team of 4 agents to work in parallel. Each agent should work in its own git worktree to avoid conflicts.
+Add three features, an operational playbook, and documentation updates to this notification service. Create a team of 4 agents to work in parallel on items 1-4. Each agent should work in its own git worktree to avoid conflicts.
 
 1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key header on all /webhooks routes. Valid keys: ["notify-dev-key", "notify-prod-key"]. Return 401 JSON error for missing or invalid keys. Write unit tests in tests/auth.test.ts.
 
@@ -9,6 +9,10 @@ Add three features and an operational playbook to this notification service. Cre
 4. On-call playbook — Create docs/oncall-playbook.md. Read tests/acceptance.test.ts to understand the three features being built. For each feature (auth middleware, rate limiter, stats endpoint), write a runbook entry with: what it does, success/error responses, how to diagnose failures, and rollback steps. This is the on-call engineer's reference — write it from the API contract, not from implementation.
 
 After all three features are implemented, wire the auth middleware and rate limiter into server.ts. The on-call playbook runs in parallel with the feature work — it doesn't depend on the feature agents and they don't depend on it.
+
+After wiring is complete:
+
+5. Librarian — Update CLAUDE.md to reflect the new features. Add the auth middleware, rate limiter, and stats endpoint to the API section. Update the architecture diagram to include new files (src/middleware/auth.ts, src/services/rate-limiter.ts, src/routes/stats.ts). The docs should match the current state of the code. This task is blocked until wiring is done.
 
 Optional — cross-model review: If GitHub Copilot CLI is installed (`copilot --version`), run /crossmodel-review on src/middleware/auth.ts, src/services/rate-limiter.ts, and src/routes/stats.ts to get a second opinion from Google and OpenAI models. Reason over the feedback — fix real issues, document why you disagree with false positives. Skip this step if Copilot CLI is not available.
 

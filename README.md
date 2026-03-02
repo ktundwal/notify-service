@@ -55,11 +55,11 @@ Before agents touch anything, look at the acceptance tests — the spec you're g
 # Read the acceptance test file
 cat tests/acceptance.test.ts
 
-# Run them — all 19 should fail (the code doesn't exist yet)
+# Run them — all 23 should fail (the code doesn't exist yet)
 npx vitest run tests/acceptance.test.ts
 ```
 
-You'll see 19 failures. That's the starting line.
+You'll see 23 failures. That's the starting line.
 
 ### Step 2: Open three terminals side by side (1 min)
 
@@ -106,6 +106,7 @@ The prompt asks Claude to:
 - Three agents build one feature each with unit tests
 - A fourth agent writes an on-call playbook from the acceptance test spec
 - After all three features finish, wire everything into server.ts
+- After wiring, a librarian task updates CLAUDE.md with the new endpoints
 - Definition of done: `npm run verify` passes, including the acceptance tests
 
 ### Step 4: Watch (5-8 min)
@@ -115,7 +116,7 @@ This is where you observe. Here's what happens and what to look for:
 **Phase 1 — Lead plans (~30s)**
 The lead agent reads CLAUDE.md, explores the codebase, then creates tasks.
 - Terminal 2 shows: `TASK+` lines (tasks being created)
-- Look for: 5 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers
+- Look for: 6 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers; #6 (librarian) blocked by #4
 
 **Phase 2 — Agents spawn (~15s)**
 Four agents start, each in its own git worktree.
@@ -132,13 +133,13 @@ As each agent finishes, it messages the lead.
 - Terminal 1 shows: completion messages with test results
 - Terminal 2 shows: `MSG` and `TASK✓` lines
 
-**Phase 5 — Integration (~1 min)**
-Task #4 unblocks. The lead wires auth + rate limiter into server.ts.
-- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`
+**Phase 5 — Integration + Docs (~1-2 min)**
+Task #4 unblocks. The lead wires auth + rate limiter into server.ts. Then task #6 (librarian) unblocks and CLAUDE.md gets updated with the new endpoints.
+- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `TASK→ #6 in_progress`, then `EDIT CLAUDE.md`
 
 **Phase 6 — Verification (~1 min)**
 The lead runs `npm run verify`.
-- Terminal 1 shows: all tests passing (including your 19 acceptance tests)
+- Terminal 1 shows: all tests passing (including your 23 acceptance tests)
 - Terminal 2 shows: `BASH` line for the verify command
 
 **Phase 7 — Cross-model review *(optional, ~2 min)***
@@ -176,7 +177,7 @@ To go back to the starting state and run the exercise again:
 bash demo/reset.sh
 ```
 
-This reverts all file changes, removes files created by agents, and clears the activity log. You're back to 19 tests, 19 failing acceptance tests, ready to go again.
+This reverts all file changes, removes files created by agents, and clears the activity log. You're back to 19 tests, 23 failing acceptance tests, ready to go again.
 
 ## What to Notice
 
@@ -194,9 +195,10 @@ This reverts all file changes, removes files created by agents, and clears the a
 | Acceptance criteria in ADO item | tests/acceptance.test.ts |
 | Work item closed, PR merged | TaskUpdate → completed |
 | Blocked items unblock | blockedBy dependencies resolve |
+| Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
 | CI pipeline runs green | `npm run verify` passes |
 
-### Four concepts to take away
+### Five concepts to take away
 
 1. **Acceptance tests = external quality gate.** Agents write their own unit tests (grading their own homework). The acceptance tests are YOUR spec — agents can't modify them, only satisfy them.
 
@@ -205,6 +207,8 @@ This reverts all file changes, removes files created by agents, and clears the a
 3. **Hooks = observability.** The activity log isn't magic — it's a shell script that runs on every tool call. You can customize what gets logged, add alerts, or pipe to any monitoring system.
 
 4. **Operational artifacts = on-call readiness.** The on-call agent reads the spec (acceptance tests) and writes a runbook — same as your on-call engineer documenting expected behavior before code ships. Operational readiness is part of development, not an afterthought.
+
+5. **Docs are part of "done".** The librarian task updates CLAUDE.md after features are wired — if the API changed and the docs didn't, the work isn't finished. The acceptance tests verify that the docs reflect the current state of the code.
 
 ## Project Structure
 
@@ -219,7 +223,7 @@ notify-service/
 │   ├── services/
 │   └── storage/
 ├── tests/
-│   ├── acceptance.test.ts      ← YOUR spec (19 tests, do not modify)
+│   ├── acceptance.test.ts      ← YOUR spec (23 tests, do not modify)
 │   ├── templates.test.ts       ← existing unit tests
 │   ├── dedup.test.ts
 │   └── dispatcher.test.ts

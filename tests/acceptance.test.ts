@@ -291,3 +291,30 @@ describe('Acceptance: On-Call Playbook', () => {
     expect(hasDiagnostics).toBe(true);
   });
 });
+
+// ─── Librarian (Docs Updated) ───────────────────────────────────
+
+describe('Acceptance: Librarian (Docs Updated)', () => {
+  let claudeMd: string;
+
+  beforeEach(() => {
+    const claudeMdPath = path.join(process.cwd(), 'CLAUDE.md');
+    claudeMd = fs.readFileSync(claudeMdPath, 'utf-8');
+  });
+
+  it('CLAUDE.md documents the stats endpoint', () => {
+    expect(claudeMd).toMatch(/\/stats/);
+  });
+
+  it('CLAUDE.md documents API key authentication', () => {
+    expect(claudeMd).toMatch(/X-API-Key/i);
+  });
+
+  it('CLAUDE.md documents rate limiting', () => {
+    expect(claudeMd).toMatch(/rate limit/i);
+  });
+
+  it('CLAUDE.md architecture includes auth middleware file', () => {
+    expect(claudeMd).toMatch(/middleware\/auth/);
+  });
+});
