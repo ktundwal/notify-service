@@ -1,9 +1,11 @@
-Add three features to this notification service. Create a team of 3 agents to work in parallel.
+Add three features to this notification service. Create a team of 3 agents to work in parallel. Each agent should work in its own git worktree to avoid conflicts.
 
-1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key header on all /webhooks routes. Valid keys: ["notify-dev-key", "notify-prod-key"]. Return 401 JSON error for missing or invalid keys. Write tests in tests/auth.test.ts.
+1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key header on all /webhooks routes. Valid keys: ["notify-dev-key", "notify-prod-key"]. Return 401 JSON error for missing or invalid keys. Write unit tests in tests/auth.test.ts.
 
-2. Rate limiter — Create src/services/rate-limiter.ts. In-memory sliding window: max 100 requests per minute per sourceId. Apply to POST /webhooks/notify only. Return 429 with a Retry-After header when exceeded. Write tests in tests/rate-limiter.test.ts.
+2. Rate limiter — Create src/services/rate-limiter.ts. In-memory sliding window: max 100 requests per minute per sourceId. Export createRateLimiter(maxRequests, windowMs) that returns Express middleware. Apply to POST /webhooks/notify only. Return 429 with a Retry-After header when exceeded. Write unit tests in tests/rate-limiter.test.ts.
 
-3. Stats endpoint — Create src/routes/stats.ts. GET /stats returns notification counts grouped by channel and priority for the last hour. Add the query to src/storage/sqlite.ts. Register the route in server.ts. Write tests in tests/stats.test.ts.
+3. Stats endpoint — Create src/routes/stats.ts. GET /stats returns notification counts grouped by channel and priority for the last hour. Add a getNotificationStats(sinceMinutes) function to src/storage/sqlite.ts. Register the route in server.ts. Write unit tests in tests/stats.test.ts.
 
-After all three features are implemented, wire the auth middleware and rate limiter into server.ts. Run npm run verify to confirm everything passes.
+After all three features are implemented, wire the auth middleware and rate limiter into server.ts.
+
+Definition of done: run npm run verify — type check AND all tests must pass, including tests/acceptance.test.ts which contains pre-written acceptance tests that validate the exact behavior specified above. Do not modify acceptance.test.ts.

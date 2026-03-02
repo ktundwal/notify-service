@@ -21,6 +21,30 @@ Claude Code agent teams do the exact same thing. This demo makes that visible.
 
 ---
 
+## Three Concepts Beyond "Give It a Prompt"
+
+### 1. Acceptance Tests = External Quality Gate
+
+The agents write their own unit tests — but they're grading their own homework. `tests/acceptance.test.ts` is written by the human before the agents start. It validates the exact behavior specified in the prompt. Agents cannot modify it — they can only make it pass.
+
+**Human parallel:** Your team has a QA spec or acceptance criteria in the ticket. Devs don't write those — they write code that satisfies them.
+
+### 2. Git Worktrees = Each Dev Gets Their Own Branch
+
+Without worktrees, all agents edit the same working directory. That works when they touch different files, but if two agents edit the same file, they clobber each other.
+
+With worktrees (`isolation: "worktree"` on the Agent tool), each agent gets a **full isolated copy of the repo** on its own branch. They work independently, then their changes get merged back.
+
+**Human parallel:** Three devs working on three feature branches, not one shared desktop.
+
+### 3. Hooks = Observability
+
+Hooks log every tool call to `agent-activity.log`. You see task creation, file edits, agent messages — all timestamped. It's the "CI dashboard" view into the team's work.
+
+**Human parallel:** Your team's Slack channel + CI pipeline + Jira board, combined into one stream.
+
+---
+
 ## What the Audience Sees
 
 Two terminals side-by-side:
@@ -38,8 +62,6 @@ Two terminals side-by-side:
 └─────────────────────────────┘  └─────────────────────────────┘
 ```
 
-Terminal 1 is what Claude Code normally shows. Terminal 2 is the transparency layer — powered by hooks that log every tool call to `agent-activity.log`.
-
 ---
 
 ## Setup (2 min before demo)
@@ -49,6 +71,7 @@ Terminal 1 is what Claude Code normally shows. Terminal 2 is the transparency la
 - Claude Code installed and authenticated
 - `jq` installed (`jq --version`)
 - `notify-service` project cloned with `npm install` done
+- Repo is clean (`git status` shows nothing)
 
 ### Terminal 1: Claude Code
 
@@ -78,33 +101,61 @@ If the observer terminal stays empty after you start working in Claude Code, che
 3. `hooks/activity-logger.sh` is readable
 4. Claude Code was started FROM the project root (not a parent directory)
 
+### Show acceptance tests before pasting the prompt
+
+Before you paste the prompt, show the audience the acceptance test file:
+
+```
+> Read tests/acceptance.test.ts and tell me what it expects
+```
+
+Claude will summarize: "14 acceptance tests that check auth middleware rejects bad keys, rate limiter returns 429, and stats endpoint groups by channel/priority."
+
+**Say:** "These tests were written by me, not the agents. This is the spec — same as acceptance criteria in a Jira ticket. The agents can't modify this file. They have to write code that makes it pass."
+
+Then run the acceptance tests to show they fail:
+
+```
+> Run npx vitest run tests/acceptance.test.ts
+```
+
+**Say:** "14 failures. All saying 'module not found' — the code doesn't exist yet. The agents' job is to make these pass."
+
 ---
 
 ## The Prompt
 
-Paste this into Claude Code (Terminal 1). The full text is in `demo/prompt.txt`.
+Now paste this into Claude Code. Full text in `demo/prompt.txt`.
 
 ```
 Add three features to this notification service. Create a team of 3 agents
-to work in parallel.
+to work in parallel. Each agent should work in its own git worktree to
+avoid conflicts.
 
 1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key
    header on all /webhooks routes. Valid keys: ["notify-dev-key",
    "notify-prod-key"]. Return 401 JSON error for missing or invalid keys.
-   Write tests in tests/auth.test.ts.
+   Write unit tests in tests/auth.test.ts.
 
 2. Rate limiter — Create src/services/rate-limiter.ts. In-memory sliding
-   window: max 100 requests per minute per sourceId. Apply to POST
-   /webhooks/notify only. Return 429 with a Retry-After header when
-   exceeded. Write tests in tests/rate-limiter.test.ts.
+   window: max 100 requests per minute per sourceId. Export
+   createRateLimiter(maxRequests, windowMs) that returns Express middleware.
+   Apply to POST /webhooks/notify only. Return 429 with a Retry-After
+   header when exceeded. Write unit tests in tests/rate-limiter.test.ts.
 
 3. Stats endpoint — Create src/routes/stats.ts. GET /stats returns
    notification counts grouped by channel and priority for the last hour.
-   Add the query to src/storage/sqlite.ts. Register the route in server.ts.
-   Write tests in tests/stats.test.ts.
+   Add a getNotificationStats(sinceMinutes) function to
+   src/storage/sqlite.ts. Register the route in server.ts. Write unit tests
+   in tests/stats.test.ts.
 
 After all three features are implemented, wire the auth middleware and rate
-limiter into server.ts. Run npm run verify to confirm everything passes.
+limiter into server.ts.
+
+Definition of done: run npm run verify — type check AND all tests must
+pass, including tests/acceptance.test.ts which contains pre-written
+acceptance tests that validate the exact behavior specified above. Do not
+modify acceptance.test.ts.
 ```
 
 ---
@@ -113,11 +164,11 @@ limiter into server.ts. Run npm run verify to confirm everything passes.
 
 ### Phase 1: Understanding (0:00 – 0:30)
 
-**What Claude does:** Reads CLAUDE.md, explores the codebase, understands the architecture.
+**What Claude does:** Reads CLAUDE.md, explores the codebase, reads the acceptance tests to understand what it needs to build.
 
 **Activity log shows:** Nothing yet — Read/Glob aren't logged (they're reconnaissance, not action).
 
-**Say:** "Watch — same thing a new dev does on day one. Reads the project docs, browses the code. It's building a mental model before writing anything."
+**Say:** "Watch — same thing a new dev does on day one. Reads the project docs, browses the code. And notice — it's reading the acceptance tests. It's reading the spec before writing code. That's the behavior you want."
 
 ---
 
@@ -136,15 +187,15 @@ limiter into server.ts. Run npm run verify to confirm everything passes.
 17:44:02  TASK→    #3 in_progress → agent-stats
 ```
 
-**Say:** "It just broke the work into tasks. Look at the log — three tasks created, each assigned to a different agent. And notice the fourth task, 'wire into server.ts.' That one is blocked until all three features are done. That's a dependency graph — same thing you'd put on your sprint board."
+**Say:** "It broke the work into tasks. Three features, three agents, one wiring task that's blocked until all three are done. That's a dependency graph — same as your sprint board."
 
-**Teaching point:** `TaskCreate` = creating Jira tickets. `blockedBy` = dependency links. The lead doesn't start coding — it plans first.
+**Teaching point:** The lead doesn't start coding — it plans first, creates the task board, then delegates.
 
 ---
 
-### Phase 3: Agent Spawn (1:00 – 1:15)
+### Phase 3: Agent Spawn + Worktrees (1:00 – 1:15)
 
-**What Claude does:** Spawns 2-3 agents, each in their own context window.
+**What Claude does:** Spawns 3 agents, each in their own git worktree.
 
 **Activity log shows:**
 ```
@@ -153,15 +204,15 @@ limiter into server.ts. Run npm run verify to confirm everything passes.
 17:44:04  SPAWN    general-purpose ...i9j0k1l2
 ```
 
-**Say:** "Three agents just spawned. Each has its own context window — they can't see each other's work unless they send a message. Same as three devs on your team working in three different VS Code windows."
+**Say:** "Three agents spawned, each in its own git worktree — an isolated copy of the repo on its own branch. Same as three devs, each working on a feature branch. They can't clobber each other's files."
 
-**Teaching point:** Separate context windows = no interference. Agent A changing auth code doesn't confuse Agent B working on rate limiting.
+**Teaching point:** Worktrees = feature branches. Each agent gets a full, independent working directory. When they're done, changes merge back. This is how real teams avoid merge conflicts.
 
 ---
 
 ### Phase 4: Parallel Work (1:15 – 3:00)
 
-**What Claude does:** Agents read existing files, create new files, write implementations, write tests.
+**What Claude does:** Agents read existing files, create new modules, write implementations and tests.
 
 **Activity log shows:**
 ```
@@ -174,22 +225,20 @@ limiter into server.ts. Run npm run verify to confirm everything passes.
 17:44:25  WRITE    tests/stats.test.ts
 ```
 
-**Say:** "All three working simultaneously. Look at the log — different files being written by different agents. auth.ts, rate-limiter.ts, stats.ts — all in parallel. One dev per feature, no stepping on each other's toes."
+**Say:** "All three working simultaneously. Look at the log — different files, same timestamps. auth.ts, rate-limiter.ts, stats.ts written in parallel. In human terms: three devs, three PRs, zero coordination overhead."
 
 **If agents communicate:**
 ```
 17:44:18  MSG      → lead: Auth middleware done, tests passing
 ```
 
-**Say:** "See that message? The auth agent just told the lead it's done. Same as posting in your team's channel: 'PR ready for review.'"
-
-**Teaching point:** The EDIT/WRITE lines are the proof that parallel work is real. Different files, same timestamps.
+**Say:** "The auth agent just told the lead it's done. Same as posting in your team channel: 'PR ready for review.'"
 
 ---
 
 ### Phase 5: Completion + Wiring (3:00 – 4:00)
 
-**What Claude does:** Tasks marked complete, blocked task unblocks, lead (or an agent) integrates.
+**What Claude does:** Tasks marked complete, blocked task unblocks, lead integrates changes and wires everything into server.ts.
 
 **Activity log shows:**
 ```
@@ -200,22 +249,20 @@ limiter into server.ts. Run npm run verify to confirm everything passes.
 17:44:40  EDIT     src/server.ts
 ```
 
-**Say:** "Tasks 1, 2, 3 done. The 'wire up' task just unblocked — now it's integrating everything into server.ts. This is the merge step. In your team, this would be the tech lead merging three PRs and resolving any integration issues."
-
-**Teaching point:** Task #4 was blocked by tasks #1, #2, #3. It couldn't start until all dependencies resolved. Same as "don't merge the integration PR until all feature PRs are in."
+**Say:** "All three features done. The wiring task just unblocked. Now it's integrating into server.ts — importing the middleware, mounting the routes. This is the merge step."
 
 ---
 
 ### Phase 6: Verification (4:00 – 5:00)
 
-**What Claude does:** Runs `npm run verify` (tsc --noEmit + vitest run).
+**What Claude does:** Runs `npm run verify` — type check + ALL tests including acceptance.
 
 **Activity log shows:**
 ```
 17:44:45  BASH     Run verification: tsc + vitest
 ```
 
-**Say:** "Definition of done: type check passes, all tests pass. Same as your CI pipeline. And it knew to run `npm run verify` because that's in CLAUDE.md — the project's 'how to contribute' doc."
+**Say:** "Definition of done. Type check passes, their unit tests pass, AND the acceptance tests I wrote pass. 14 acceptance tests that I wrote before the agents started. They didn't modify the spec — they wrote code that satisfies it. Same as your QA team signing off."
 
 ---
 
@@ -226,11 +273,13 @@ limiter into server.ts. Run npm run verify to confirm everything passes.
 | New dev reads the wiki | Lead read CLAUDE.md |
 | Lead creates Jira tickets | TaskCreate → task list |
 | Lead assigns parallel work | TaskUpdate with owner → agents |
+| Each dev gets a feature branch | Each agent gets a git worktree |
 | 3 devs work simultaneously | 3 agents editing different files |
 | Dev posts in team channel | SendMessage → lead |
-| Ticket closed, PR merged | TaskUpdate → completed |
+| Acceptance criteria in ticket | tests/acceptance.test.ts (human-written) |
+| Ticket closed, PR merged | TaskUpdate → completed, worktree merged |
 | Blocked tickets unblock | blockedBy dependencies resolve |
-| CI pipeline runs green | `npm run verify` passes |
+| CI pipeline runs green | `npm run verify` passes (including acceptance) |
 
 ---
 
@@ -259,16 +308,23 @@ This reverts all file changes, removes untracked files, and clears the activity 
 - The prompt explicitly says "Create a team of 3 agents." If Claude solves it alone, re-prompt: "Use a team of 3 agents to parallelize this."
 - Check you're on a model that supports teams (Opus or Sonnet)
 
+**Worktrees not created:**
+- Worktrees require git to be initialized (`git init` or cloned repo)
+- Claude may choose not to use worktrees if the files are independent enough — this is fine, it just means the agents don't need isolation for this particular task
+
 **Takes too long (> 5 min):**
 - Live AI — say "This is real-time. In practice, you start the agents and go get coffee."
 - If truly stuck > 3 min on one phase, `/exit` and show the activity log you already captured. The log tells the story even without the live terminal.
 
 **Agent hits an error:**
 - Say "One agent hit an issue — that happens. In a human team, a dev would ping the lead. Watch what happens next." (Usually the lead or agent self-corrects.)
-- If it doesn't recover, this is actually a good teaching moment: "This is why you review agent output. Trust but verify."
+- If it doesn't recover: "This is why you review output. Trust but verify."
 
 **verify fails after wiring:**
 - Expected sometimes — integration isn't trivial. Say "The integration step found a type error. Watch — it'll fix it and re-run. Same as your CI catching a merge conflict."
+
+**Acceptance tests fail but unit tests pass:**
+- Great teaching moment: "The agents' own tests pass, but the acceptance tests I wrote caught a behavioral issue. This is exactly why you have external quality gates."
 
 ---
 
@@ -277,11 +333,13 @@ This reverts all file changes, removes untracked files, and clears the activity 
 | Phase | Duration | Cumulative |
 |---|---|---|
 | Setup (before demo) | 2 min | — |
-| Understanding | 0:30 | 0:30 |
-| Task breakdown | 0:30 | 1:00 |
-| Agent spawn | 0:15 | 1:15 |
-| Parallel work | 1:45 | 3:00 |
-| Completion + wiring | 1:00 | 4:00 |
-| Verification | 1:00 | 5:00 |
+| Show acceptance tests | 1:00 | 1:00 |
+| Paste prompt | — | 1:00 |
+| Understanding | 0:30 | 1:30 |
+| Task breakdown | 0:30 | 2:00 |
+| Agent spawn | 0:15 | 2:15 |
+| Parallel work | 1:45 | 4:00 |
+| Completion + wiring | 1:00 | 5:00 |
+| Verification | 1:00 | 6:00 |
 
-Total demo time: ~5 minutes. Budget 7-8 min to account for AI variability.
+Total demo time: ~6 minutes. Budget 8-10 min to account for AI variability.

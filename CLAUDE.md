@@ -44,6 +44,8 @@ GET    /health                  — health check
 npm run verify       # tsc --noEmit && vitest run
 ```
 
+tests/acceptance.test.ts contains pre-written acceptance tests that validate expected behavior for new features. These tests are the spec — do not modify them. Make them pass.
+
 ## Key Concepts
 
 - **Priority levels**: P0 (critical) through P3 (low). P0 always breaks through quiet hours.
