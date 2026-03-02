@@ -1,9 +1,11 @@
 /**
  * Acceptance tests — written by the human, not the agents.
  *
- * These define the "definition of done" for the 3-feature demo task.
+ * These define the "definition of done" for the demo task.
+ * 6 test groups: 3 features (auth, rate-limiter, stats) + 3 artifacts
+ * (on-call playbook, CLAUDE.md docs update, UX spec).
  * Agents write their own unit tests, but THIS file is the external
- * verification. If these pass, the features work as specified.
+ * verification. If these pass, the features and artifacts work as specified.
  *
  * How this works:
  * - Each describe block dynamically imports the module the agents must create.

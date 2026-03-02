@@ -6,11 +6,17 @@ You'll give a team of 4 AI agents a real feature request, watch them break it do
 
 ## Prerequisites
 
+**Required:**
 - **Claude Code** installed and authenticated (`claude --version`)
-- **Node.js** 18+ (`node --version`)
-- **jq** installed (`jq --version`) — used by the observability hooks
-- **Git** initialized (this repo)
-- **GitHub Copilot CLI** *(optional)* — enables cross-model review step (`copilot --version`)
+- **Node.js** 18+ (`node --version`) — includes npm
+- **Git** (`git --version`)
+- **jq** (`jq --version`) — used by the observability hooks
+- **Build tools** for native modules (better-sqlite3) — Mac: `xcode-select --install`, Windows: Visual Studio Build Tools
+- **watch** (`watch --version`) — used by Terminal 3 for worktree monitoring. Mac: `brew install watch`, Windows: comes with Git Bash or `choco install watch`
+
+**Optional:**
+- **GitHub Copilot CLI** (`copilot --version`) — enables cross-model review step
+- **Marp CLI** — auto-installed on first use of `/session-learnings` skill
 
 > **Note:** Agent teams is an experimental feature. This project's `.claude/settings.json` enables it automatically via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`. No extra setup needed — just clone and go.
 
@@ -306,7 +312,7 @@ This package requires native compilation. Make sure you have build tools:
 4. Make sure you started Claude Code FROM the project root (`cd notify-service && claude`), not a parent directory
 
 **Agents don't spawn / Claude does it alone**
-The prompt says "Create a team of 3 agents." If Claude handles it without a team, add: "Use a team of 3 agents to parallelize this — one agent per feature."
+The prompt says "Create a team of 4 agents." If Claude handles it without a team, add: "Use a team of 4 agents to parallelize this."
 
 **One agent stalls or errors**
 Normal. Say "Continue" or let the lead reassign. Agents self-correct most of the time. If stuck, `/exit` and run `bash demo/reset.sh` to start fresh.
