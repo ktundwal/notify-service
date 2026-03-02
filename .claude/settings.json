@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "TaskCreate|TaskUpdate|SendMessage|Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash hooks/activity-logger.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash hooks/activity-logger.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash hooks/activity-logger.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
