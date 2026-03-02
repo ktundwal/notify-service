@@ -131,6 +131,14 @@ If the observer terminal stays empty after you start working in Claude Code, che
 3. `hooks/activity-logger.sh` is readable
 4. Claude Code was started FROM the project root (not a parent directory)
 
+### Show the dashboard
+
+Open `http://localhost:3000/` in a browser. The dashboard ships with the repo — it's the "before" state:
+
+![Dashboard starting state](../docs/dashboard-starting-state.png)
+
+**Say:** "This is the notification dashboard. Notice the stats panel — it shows a 404 error because the `/stats` endpoint doesn't exist yet. The send form is there but has no auth or rate limiting. After the agents build the features, everything lights up. Then the PO agent reviews this UI and writes a spec, and a dev agent implements the improvements."
+
 ### Show acceptance tests before pasting the prompt
 
 Before you paste the prompt, show the audience the acceptance test file:

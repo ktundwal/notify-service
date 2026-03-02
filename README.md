@@ -41,6 +41,14 @@ Three features need to be added:
 2. **Rate limiter** — 100 requests per minute per source, sliding window
 3. **Stats endpoint** — notification counts by channel and priority
 
+### The dashboard (starting state)
+
+The repo ships with a notification dashboard at `http://localhost:3000/`. Before agents run, the `/stats` endpoint doesn't exist — the dashboard shows the gap clearly.
+
+![Dashboard starting state](docs/dashboard-starting-state.png)
+
+After agents build the features, stats populate, auth protects the send form, and rate limiting kicks in. The PO agent reviews this dashboard and writes a UX spec, then a dev agent implements the improvements.
+
 ### What makes this interesting
 
 You won't write the code. You'll direct a team of 4 agents to build it — using the same workflow your engineering team uses: task breakdown, parallel work, isolated branches, acceptance criteria, and CI verification.
