@@ -53,15 +53,14 @@ The repo ships with a notification dashboard at `src/public/index.html` (served 
 
 ### The terminal layout
 
-Attendees have 3 terminals open:
+Attendees have 2 terminals open:
 
 | Terminal | What it shows | Command |
 |----------|--------------|---------|
 | Terminal 1 | Claude Code — where agents work | `claude` |
 | Terminal 2 | Activity log — real-time observability | `bash demo/observe.sh` |
-| Terminal 3 | Worktree watcher — branches appearing/disappearing | `watch -n 2 git worktree list` |
 
-You are Terminal 4 — the help desk.
+You are the optional Terminal 3 — the help desk.
 
 ## Reading the activity log
 
@@ -108,7 +107,7 @@ This is the core teaching point. Everything maps 1:1:
 
 ### Git worktrees
 
-Each agent gets an isolated copy of the repo on its own branch via `isolation: "worktree"`. This prevents file conflicts during parallel work. Worktrees appear in Terminal 3 as agents spawn and disappear when they finish. It's the same as feature branches — each dev gets their own working directory.
+Each agent gets an isolated copy of the repo on its own branch via `isolation: "worktree"`. This prevents file conflicts during parallel work. It's the same as feature branches — each dev gets their own working directory. Students can optionally run `watch -n 2 git worktree list` in a separate terminal to see branches appear and disappear.
 
 ### Hooks = observability
 

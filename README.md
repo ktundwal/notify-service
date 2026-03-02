@@ -12,7 +12,7 @@ You'll give a team of 4 AI agents a real feature request, watch them break it do
 - **Git** (`git --version`)
 - **jq** (`jq --version`) — used by the observability hooks
 - **Build tools** for native modules (better-sqlite3) — Mac: `xcode-select --install`, Windows: Visual Studio Build Tools
-- **watch** (`watch --version`) — used by Terminal 3 for worktree monitoring. Mac: `brew install watch`, Windows: comes with Git Bash or `choco install watch`
+- **watch** *(optional)* — `watch -n 2 git worktree list` shows worktrees in a separate terminal if you want to see branches appear/disappear
 
 **Optional:**
 - **GitHub Copilot CLI** (`copilot --version`) — enables cross-model review step
@@ -83,19 +83,19 @@ npm run dev          # open http://localhost:3000 in your browser
 
 Notice the stats panel shows a 404 error — the `/stats` endpoint doesn't exist yet. After agents build the features, everything lights up. Press `Ctrl+C` to stop the server when you're done looking.
 
-### Step 2: Open three terminals side by side (1 min)
+### Step 2: Open two terminals side by side (1 min)
 
 ```
-┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐
-│ Terminal 1:            │  │ Terminal 2:            │  │ Terminal 3:            │
-│ Claude Code            │  │ Activity Log           │  │ Worktrees & Files      │
-│ (where agents work)   │  │ (observability)        │  │ (git worktree list)   │
-└───────────────────────┘  └───────────────────────┘  └───────────────────────┘
+┌──────────────────────────────┐  ┌──────────────────────────────┐
+│ Terminal 1:                   │  │ Terminal 2:                   │
+│ Claude Code                   │  │ Activity Log                  │
+│ (where agents work)          │  │ (observability)               │
+└──────────────────────────────┘  └──────────────────────────────┘
 ```
 
-> **Optional — Terminal 4 (Tutor):** If you get stuck, open a 4th terminal and run `claude --agent tutor`. It's a read-only helper that explains concepts, interprets the activity log, and guides debugging — without writing code for you.
+> **Optional — Terminal 3 (Tutor):** If you get stuck, open a 3rd terminal and run `claude --agent tutor`. It's a read-only helper that explains concepts, interprets the activity log, and guides debugging — without writing code for you.
 
-Split panes in iTerm2: `Cmd+D` (vertical split), then select the rightmost pane and `Cmd+D` again.
+Split panes in iTerm2: `Cmd+D` (vertical split).
 
 **Terminal 1:**
 ```bash
@@ -110,13 +110,7 @@ cd notify-service
 bash demo/observe.sh
 ```
 
-**Terminal 3:**
-```bash
-cd notify-service
-watch -n 2 git worktree list
-```
-
-Terminal 2 tails the activity log — task creation, agent spawns, file edits, and messages in real time. Terminal 3 shows worktrees appearing as agents spawn and disappearing as they complete.
+Terminal 2 tails the activity log — task creation, agent spawns, file edits, and messages in real time.
 
 ### Step 3: Paste the prompt (1 min)
 

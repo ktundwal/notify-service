@@ -65,20 +65,19 @@ The PO agent writes a UX spec (`docs/ux-spec.md`) after features are wired. Then
 
 ## What the Audience Sees
 
-Three terminals side-by-side:
+Two terminals side-by-side:
 
 ```
-┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐
-│ Terminal 1:            │  │ Terminal 2:            │  │ Terminal 3:            │
-│ Claude Code            │  │ Activity Log           │  │ Worktrees & Files      │
-│                        │  │                        │  │                        │
-│ The "standup" — what   │  │ The "CI dashboard" —   │  │ The "branch view" —    │
-│ the team is doing now  │  │ what's happening under │  │ watch worktrees appear │
-│                        │  │ the hood               │  │ as agents spawn        │
-│ Shows: agent spawns,   │  │ Shows: task lifecycle,  │  │                        │
-│ messages, task status  │  │ file edits, timestamps │  │ Shows: git worktree    │
-│                        │  │                        │  │ list refreshing live   │
-└───────────────────────┘  └───────────────────────┘  └───────────────────────┘
+┌──────────────────────────────┐  ┌──────────────────────────────┐
+│ Terminal 1:                   │  │ Terminal 2:                   │
+│ Claude Code                   │  │ Activity Log                  │
+│                               │  │                               │
+│ The "standup" — what          │  │ The "CI dashboard" —          │
+│ the team is doing now         │  │ what's happening under        │
+│                               │  │ the hood                      │
+│ Shows: agent spawns,          │  │ Shows: task lifecycle,         │
+│ messages, task status         │  │ file edits, timestamps        │
+└──────────────────────────────┘  └──────────────────────────────┘
 ```
 
 ---
@@ -108,15 +107,6 @@ claude
 cd C:/github/notify-service
 bash demo/observe.sh
 ```
-
-### Terminal 3: Worktree Watcher
-
-```bash
-cd C:/github/notify-service
-watch -n 2 git worktree list
-```
-
-Shows worktrees appearing as agents spawn and disappearing as they complete. Visual proof of "each dev gets their own branch."
 
 ### Verify hooks are active
 
@@ -221,9 +211,9 @@ Full text in `demo/prompt.txt`. It asks for 4 agents (3 features + on-call playb
 
 **Say:** "Four agents spawned, each in its own git worktree. Three for features, one for the on-call playbook. Same as your team — three devs on features and an on-call engineer writing the runbook."
 
-**Terminal 3:** Point to the worktree watcher — it now shows 5 entries (main + 4 agent worktrees). "See — four new worktrees just appeared. Each agent has its own copy of the repo."
-
 **Teaching point:** Worktrees = feature branches. Each agent gets a full, independent working directory. When they're done, changes merge back. The on-call agent is already reading the acceptance tests — the spec — and writing the runbook from the contract.
+
+> **Optional:** If you have a 3rd terminal running `watch -n 2 git worktree list`, point to it — it shows worktrees appearing as agents spawn.
 
 ---
 
