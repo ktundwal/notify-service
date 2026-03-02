@@ -88,9 +88,24 @@ Duration: 20 min total.
 
 ---
 
-## What We're Working With
+## notify-service
 
-**notify-service** — a Teams-style notification service I built for this tutorial.
+An internal notification hub for engineering teams. Services push alerts — deploys, incidents, PR activity — and engineers subscribe to the channels they care about.
+
+- **Webhooks** — any service can POST a notification with a priority level (P0–P3)
+- **Subscriptions** — engineers pick channels, set quiet hours, set a minimum priority
+- **Quiet hours** — P1–P3 notifications are held overnight. P0 always breaks through.
+- **Adaptive cards** — notifications render as Teams-style cards
+
+I built this for today's tutorial. a bit more than a hello world.
+
+<!--
+SPEAKER: "Imagine you're on an infra team. You've got 20 services pushing alerts — deploys, incidents, CI failures. Engineers are drowning in noise. So you build a notification hub. Services push to it, engineers subscribe to what they care about, and it respects quiet hours so on-call doesn't mean awake-all-night. That's notify-service."
+-->
+
+---
+
+## Under the Hood
 
 ```
 src/
@@ -107,28 +122,31 @@ src/
     └── sqlite.ts          ← SQLite persistence
 ```
 
-Not a toy — webhooks, priority filtering, quiet hours, dedup. Close to what we ship.
+Express + TypeScript strict + SQLite. 19 tests passing. ~600 lines of code.
 
 <!--
-SPEAKER: "This isn't a todo app. It's a notification service with webhooks, priority levels, quiet hours — patterns you recognize from our codebase. I built it specifically so the demo feels real."
+SPEAKER: "Standard stack. Express, TypeScript strict, SQLite for persistence. The codebase has routes, services, storage — layering you are probably familiar with. 19 tests already passing."
 -->
 
 ---
 
-## The Feature Request
+## The Customer Problem
 
-Add three capabilities to the service:
+Your PM just came back from customer interviews. Three things keep coming up:
 
-**1. Auth middleware** — Validate `X-API-Key` header on all webhook routes
+**"We got hit by a rogue script that flooded us with duplicate alerts."**
+→ We need **rate limiting** — cap how fast any single source can push.
 
-**2. Rate limiter** — Sliding window, 100 req/min per sourceId
+**"Anyone can POST to the webhook. There's no auth."**
+→ We need **API key validation** — reject calls without a valid key.
 
-**3. Stats endpoint** — `GET /stats` with counts by channel and priority
+**"We have no visibility into what's flowing through the system."**
+→ We need a **stats endpoint** — counts by channel and priority, last hour.
 
-Each is independent. Each needs tests. All three need to be wired into `server.ts`.
+Three features. Independent. All needed before the next release.
 
 <!--
-SPEAKER: "Three features. Independent of each other but all need to integrate at the end. Sound familiar? This is a normal sprint."
+SPEAKER: "Sound familiar? PM comes back with three customer pain points, each maps to a feature, each is independent, all need to ship together. This is a normal sprint planning conversation."
 -->
 
 ---
@@ -171,7 +189,7 @@ describe('Acceptance: Stats Endpoint', () => {
 **14 tests. Written by me. Agents cannot modify this file.**
 
 <!--
-SPEAKER: "This is the spec. Same as acceptance criteria in a Jira ticket. The agents will write their own unit tests — but those are them grading their own homework. THIS file is the external quality gate. They have to make it pass, not change it."
+SPEAKER: "This is the spec. The agents will write their own unit tests — but those are them grading their own homework. THIS file is the external quality gate. They have to make it pass, not change it."
 -->
 
 ---
@@ -213,7 +231,7 @@ SPEAKER: "14 failures. Every single one says 'module not found.' The code doesn'
 
 ### This is the mindshift.
 
-### You're not writing code. You're directing a team.
+### You're not writing code. You're directing a team like an dev lead/architect
 
 <!--
 SPEAKER: "Everything up to now is familiar — write a spec, define acceptance criteria. What comes next is different. Instead of assigning this to three devs, I'm assigning it to three AI agents."
@@ -253,7 +271,7 @@ pass, including tests/acceptance.test.ts. Do not modify acceptance.test.ts.
 ```
 
 <!--
-SPEAKER: "Notice what's in here. Three features, each with specific files and behavior. A team of 3 agents. Git worktrees for isolation. And a definition of done — the acceptance tests I wrote. This is exactly the same brief you'd write in a Jira ticket for your team."
+SPEAKER: "Notice what's in here. Three features, each with specific files and behavior. A team of 3 agents. Git worktrees for isolation. And a definition of done — the acceptance tests I wrote. This is likely what you would hold in your head or write down before you fire up your IDE"
 -->
 
 ---
@@ -274,7 +292,7 @@ Task #4 is **blocked** — it can't start until all three features land.
 Same as your sprint board: three feature tickets, one integration ticket with dependencies.
 
 <!--
-SPEAKER: "The lead didn't start coding. It planned. Four tasks, three parallel, one blocked. Notice task #4 — it has dependency links. Same thing you'd set up in Jira or Azure DevOps."
+SPEAKER: "The lead didn't start coding. It planned. Four tasks, three parallel, one blocked. Notice task #4 — it has dependency links. Same thing you'd hold in your head or paper"
 -->
 
 ---
@@ -327,13 +345,13 @@ SPEAKER: "This is the same reason your team uses git branches. Isolation during 
 
 | How Your Team Works | How Agent Teams Work |
 |---|---|
-| New dev reads the wiki | Lead reads CLAUDE.md |
-| Lead creates Jira tickets | TaskCreate → task list |
+| New dev ask other devs or better yet, reads the wiki | Lead reads CLAUDE.md |
+| Lead creates ADO items | TaskCreate → task list |
 | Lead assigns to devs | TaskUpdate with owner |
 | Each dev gets a feature branch | Each agent gets a git worktree |
 | 3 devs work simultaneously | 3 agents write different files |
 | Dev posts in team channel | SendMessage → lead |
-| Acceptance criteria in ticket | tests/acceptance.test.ts |
+| Acceptance criteria in ADO item | tests/acceptance.test.ts |
 | Ticket closed, PR merged | TaskUpdate → completed |
 | Blocked tickets unblock | blockedBy dependencies resolve |
 | CI pipeline runs green | `npm run verify` passes |
@@ -417,7 +435,7 @@ How does the activity log work? **Hooks** — shell scripts that fire on tool ev
 }
 ```
 
-The hook script reads JSON from stdin (`tool_name`, `tool_input`) and appends a formatted line to the log. Ships with the project — students get it on clone.
+The hook script reads JSON from stdin (`tool_name`, `tool_input`) and appends a formatted line to the log. Ships with the project — you will get it on clone.
 
 <!--
 SPEAKER: "Hooks are how you get observability. Every tool call fires a hook. The script parses the JSON and logs it. Same concept as CI webhooks or Slack integrations — you're instrumenting the process."
@@ -462,7 +480,7 @@ SPEAKER: "46 tests. 14 of those are the acceptance tests I wrote before the agen
 | **Lines I wrote** | the prompt + acceptance tests | — |
 | **Lines agents wrote** | — | everything else |
 
-The dev's role: **define the spec, write the prompt, verify the output.**
+The dev's role: **define the spec, write the prompt, steer as your team works, verify the output.**
 
 <!--
 SPEAKER: "I wrote the acceptance tests and the prompt. That's it. The agents wrote the middleware, the rate limiter, the stats endpoint, the storage query, the unit tests, the wiring. My job was to define what 'done' looks like and verify they got there."
