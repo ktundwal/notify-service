@@ -168,59 +168,46 @@ SPEAKER: Pause. Let them think. "You'd break it into three work items. Assign ea
 Before any agent touches the code, I wrote **acceptance tests** — `tests/acceptance.test.ts`.
 
 ```typescript
-describe('Acceptance: Auth Middleware', () => {
-  it('rejects requests without X-API-Key header with 401', ...);
-  it('rejects requests with an invalid API key with 401', ...);
-  it('allows requests with valid dev API key', ...);
-  it('allows requests with valid prod API key', ...);
-});
+// 3 feature groups — does the code work?
+describe('Acceptance: Auth Middleware', () => { /* 5 tests */ });
+describe('Acceptance: Rate Limiter', () => { /* 4 tests */ });
+describe('Acceptance: Stats Endpoint', () => { /* 5 tests */ });
 
-describe('Acceptance: Rate Limiter', () => {
-  it('returns 429 with Retry-After header when limit exceeded', ...);
-  it('tracks limits independently per sourceId', ...);
-});
-
-describe('Acceptance: Stats Endpoint', () => {
-  it('counts notifications grouped by channel and priority', ...);
-  it('does not count notifications older than 1 hour', ...);
-});
+// 3 artifact groups — did the team do the operational work?
+describe('Acceptance: On-Call Playbook', () => { /* 5 tests */ });
+describe('Acceptance: Librarian (Docs Updated)', () => { /* 4 tests */ });
+describe('Acceptance: Product Owner Spec', () => { /* 4 tests */ });
 ```
 
-**14 tests. Written by me. Agents cannot modify this file.**
+**27 tests. Written by me. Agents cannot modify this file.**
+
+Not just code — the spec validates operational artifacts too: runbook, docs, UX spec.
 
 <!--
-SPEAKER: "This is the spec. The agents will write their own unit tests — but those are them grading their own homework. THIS file is the external quality gate. They have to make it pass, not change it."
+SPEAKER: "27 acceptance tests across 6 groups. Three test the features — does auth reject bad keys, does rate limiting return 429, does stats group by channel. Three test the operational work — did the on-call agent write a playbook, did the librarian update the docs, did the PO write a UX spec. Same as your definition of done including docs and runbooks, not just code."
 -->
 
 ---
 
-## Before: 14 Failures
+## Before: 27 Failures
 
 ```
- ✕ Acceptance: Auth Middleware > module exists ... and exports authMiddleware
-     → Failed to load url ../src/middleware/auth ... Does the file exist?
- ✕ Acceptance: Auth Middleware > rejects requests without X-API-Key header
- ✕ Acceptance: Auth Middleware > rejects requests with an invalid API key
- ✕ Acceptance: Auth Middleware > allows requests with valid dev API key
- ✕ Acceptance: Auth Middleware > allows requests with valid prod API key
- ✕ Acceptance: Rate Limiter > module exists ... and exports createRateLimiter
- ✕ Acceptance: Rate Limiter > allows requests under the rate limit
- ✕ Acceptance: Rate Limiter > returns 429 with Retry-After header
- ✕ Acceptance: Rate Limiter > tracks limits independently per sourceId
- ✕ Acceptance: Stats Endpoint > module exists ... and exports a router
- ✕ Acceptance: Stats Endpoint > storage exports getNotificationStats function
- ✕ Acceptance: Stats Endpoint > GET /stats returns JSON with channels and total
- ✕ Acceptance: Stats Endpoint > counts notifications grouped by channel
- ✕ Acceptance: Stats Endpoint > does not count notifications older than 1 hour
+ ✕ Auth Middleware > module exists ... Does the file exist?     (5 tests)
+ ✕ Rate Limiter > returns 429 with Retry-After header          (4 tests)
+ ✕ Stats Endpoint > counts notifications grouped by channel    (5 tests)
+ ✕ On-Call Playbook > docs/oncall-playbook.md exists
+     → ENOENT: no such file or directory                       (5 tests)
+ ✕ Librarian > CLAUDE.md documents the stats endpoint          (4 tests)
+ ✕ Product Owner Spec > demo-artifacts/ux-spec.md exists
+     → ENOENT: no such file or directory                       (4 tests)
 
- Test Files  1 failed (1)
-      Tests  14 failed (14)
+ Tests  27 failed (27)
 ```
 
-The code doesn't exist yet. The agents' job: make these pass.
+Code doesn't exist. Artifacts don't exist. The agents' job: make all 27 pass.
 
 <!--
-SPEAKER: "14 failures. Every single one says 'module not found.' The code doesn't exist. This is the starting line."
+SPEAKER: "27 failures. The code modules don't exist, the playbook doesn't exist, the UX spec doesn't exist, CLAUDE.md hasn't been updated. This is the starting line — not just for features, but for the whole team's output."
 -->
 
 ---
@@ -231,47 +218,41 @@ SPEAKER: "14 failures. Every single one says 'module not found.' The code doesn'
 
 ### This is the mindshift.
 
-### You're not writing code. You're directing a team like an dev lead/architect
+### You're not writing code. You're directing a team like a dev lead/architect
 
 <!--
-SPEAKER: "Everything up to now is familiar — write a spec, define acceptance criteria. What comes next is different. Instead of assigning this to three devs, I'm assigning it to three AI agents."
+SPEAKER: "Everything up to now is familiar — write a spec, define acceptance criteria. What comes next is different. Instead of assigning this to your team, I'm assigning it to AI agents — devs, on-call, librarian, PO."
 -->
 
 ---
 
 <!-- _class: code-slide -->
 
-## The Prompt
+## The Prompt (abridged)
 
 ```
-Add three features to this notification service. Create a team of 3 agents
-to work in parallel. Each agent should work in its own git worktree to
-avoid conflicts.
+Create a team of 4 agents to work in parallel on items 1-4.
 
-1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key
-   header on all /webhooks routes. Valid keys: ["notify-dev-key",
-   "notify-prod-key"]. Return 401 JSON error for missing or invalid keys.
-   Write unit tests in tests/auth.test.ts.
+1. Auth middleware — X-API-Key validation, 401 for bad keys
+2. Rate limiter — 100 req/min per sourceId, 429 + Retry-After
+3. Stats endpoint — GET /stats, counts by channel + priority
+4. On-call playbook — runbook from the acceptance test spec
 
-2. Rate limiter — Create src/services/rate-limiter.ts. In-memory sliding
-   window: max 100 requests per minute per sourceId. Export
-   createRateLimiter(maxRequests, windowMs) that returns Express middleware.
-   Return 429 with a Retry-After header when exceeded.
-   Write unit tests in tests/rate-limiter.test.ts.
+After wiring:
+5. Librarian — update CLAUDE.md with new endpoints
+6. Product owner — write demo-artifacts/ux-spec.md with wireframes
+7. Dashboard dev — implement PO's spec in index.html
 
-3. Stats endpoint — Create src/routes/stats.ts. GET /stats returns counts
-   grouped by channel and priority for the last hour. Add query to
-   src/storage/sqlite.ts. Write unit tests in tests/stats.test.ts.
+Optional: cross-model review via Copilot CLI (Google + OpenAI)
 
-After all three features are implemented, wire auth middleware and rate
-limiter into server.ts.
-
-Definition of done: run npm run verify — type check AND all tests must
-pass, including tests/acceptance.test.ts. Do not modify acceptance.test.ts.
+Definition of done: npm run verify — all tests pass, including
+acceptance.test.ts. Do not modify acceptance.test.ts.
 ```
+
+Full prompt in `demo/prompt.txt`.
 
 <!--
-SPEAKER: "Notice what's in here. Three features, each with specific files and behavior. A team of 3 agents. Git worktrees for isolation. And a definition of done — the acceptance tests I wrote. This is likely what you would hold in your head or write down before you fire up your IDE"
+SPEAKER: "Seven tasks. Four run in parallel — three features plus an on-call playbook. After wiring, the librarian updates docs, the PO writes a UX spec with wireframes, and a dev implements the PO's spec. Plus an optional cross-model review. This is a real team structure — not just three coders."
 -->
 
 ---
@@ -281,29 +262,32 @@ SPEAKER: "Notice what's in here. Three features, each with specific files and be
 The lead agent reads `CLAUDE.md`, explores the codebase, then creates a task board:
 
 ```
-#1 [pending]  Add auth middleware with API key validation
-#2 [pending]  Add rate limiter — sliding window per sourceId
-#3 [pending]  Add stats endpoint — counts by channel and priority
-#4 [pending]  Wire auth + rate limiter into server.ts  [blocked by #1, #2, #3]
+#1 [pending]  Auth middleware                          ← parallel
+#2 [pending]  Rate limiter                             ← parallel
+#3 [pending]  Stats endpoint                           ← parallel
+#4 [pending]  On-call playbook                         ← parallel (no blockers)
+#5 [pending]  Wire auth + rate limiter into server.ts  [blocked by #1, #2, #3]
+#6 [pending]  Librarian — update CLAUDE.md             [blocked by #5]
+#7 [pending]  Product owner — write UX spec            [blocked by #5]
+#8 [pending]  Dashboard dev — implement UX spec        [blocked by #7]
 ```
 
-Task #4 is **blocked** — it can't start until all three features land.
-
-Same as your sprint board: three feature tickets, one integration ticket with dependencies.
+Three dependency chains: features → wiring → librarian + PO → dashboard dev.
 
 <!--
-SPEAKER: "The lead didn't start coding. It planned. Four tasks, three parallel, one blocked. Notice task #4 — it has dependency links. Same thing you'd hold in your head or paper"
+SPEAKER: "Eight tasks, not four. The lead planned the WHOLE team's work — feature devs, on-call, librarian, PO, dashboard dev. Notice the dependency chains: features must finish before wiring, wiring before docs and PO review, and the PO spec must exist before the dashboard dev starts. Same as your sprint board."
 -->
 
 ---
 
-## Three Agents Spawn
+## Four Agents Spawn
 
 ```
 #1 [in_progress]  Auth middleware             (agent-auth)
 #2 [in_progress]  Rate limiter               (agent-ratelimit)
 #3 [in_progress]  Stats endpoint             (agent-stats)
-#4 [pending]      Wire into server.ts        [blocked by #1]
+#4 [in_progress]  On-call playbook           (agent-oncall)
+#5 [pending]      Wire into server.ts        [blocked by #1, #2, #3]
 ```
 
 Each agent:
@@ -311,8 +295,10 @@ Each agent:
 - Works in its **own git worktree** (isolated branch, no file conflicts)
 - Knows its **specific task** (just like a dev with a Jira ticket)
 
+The on-call agent reads the acceptance tests — the spec — and writes the runbook. It doesn't wait for the code.
+
 <!--
-SPEAKER: "Three agents, three worktrees, three context windows. Same as three devs, three feature branches, three VS Code windows. They can't step on each other."
+SPEAKER: "Four agents in parallel. Three building features, one writing the on-call playbook. The on-call agent reads the acceptance tests — same as your on-call engineer reading the Jira ticket and writing the runbook before code even ships. Operational readiness is part of development."
 -->
 
 ---
@@ -349,15 +335,18 @@ SPEAKER: "This is the same reason your team uses git branches. Isolation during 
 | Lead creates ADO items | TaskCreate → task list |
 | Lead assigns to devs | TaskUpdate with owner |
 | Each dev gets a feature branch | Each agent gets a git worktree |
-| 3 devs work simultaneously | 3 agents write different files |
+| 4 devs work simultaneously | 4 agents write different files |
+| On-call writes runbook from ticket | On-call agent writes playbook from tests |
 | Dev posts in team channel | SendMessage → lead |
+| Docs updated after feature ships | Librarian updates CLAUDE.md |
+| PO writes spec, dev implements | PO → demo-artifacts/ux-spec.md → dev |
 | Acceptance criteria in ADO item | tests/acceptance.test.ts |
-| Ticket closed, PR merged | TaskUpdate → completed |
 | Blocked tickets unblock | blockedBy dependencies resolve |
+| Ticket closed, PR merged | TaskUpdate → completed |
 | CI pipeline runs green | `npm run verify` passes |
 
 <!--
-SPEAKER: "Every row maps 1:1. This isn't a metaphor — the agent team literally uses the same workflow primitives. Task creation, assignment, parallel work, communication, dependencies, verification."
+SPEAKER: "Every row maps 1:1. Not just coding — on-call, docs, product review, and cross-role handoffs. The PO writes a spec, the dev implements it. Same workflow primitives your team uses."
 -->
 
 ---
@@ -367,51 +356,96 @@ SPEAKER: "Every row maps 1:1. This isn't a metaphor — the agent team literally
 While agents work, hooks log every action to `agent-activity.log`:
 
 ```
-21:26:01  TASK+    Add auth middleware with API key validation
-21:26:01  TASK+    Add rate limiter — sliding window per sourceId
-21:26:01  TASK+    Add stats endpoint — counts by channel and priority
-21:26:02  SPAWN    general-purpose ...a1b2c3d4
-21:26:02  SPAWN    general-purpose ...e5f6g7h8
-21:26:03  SPAWN    general-purpose ...i9j0k1l2
-21:26:10  WRITE    src/middleware/auth.ts
-21:26:12  WRITE    src/services/rate-limiter.ts
-21:26:13  EDIT     src/storage/sqlite.ts
-21:26:15  WRITE    src/routes/stats.ts
-21:26:20  WRITE    tests/auth.test.ts
-21:26:22  WRITE    tests/rate-limiter.test.ts
-21:26:25  WRITE    tests/stats.test.ts
+10:25:01  TASK+    Add auth middleware with API key validation
+10:25:01  TASK+    Add rate limiter — sliding window per sourceId
+10:25:01  TASK+    Add stats endpoint — counts by channel and priority
+10:25:02  TASK+    Write on-call playbook from acceptance test spec
+10:25:02  SPAWN    general-purpose ...a1b2c3d4
+10:25:02  SPAWN    general-purpose ...e5f6g7h8
+10:25:03  SPAWN    general-purpose ...i9j0k1l2
+10:25:03  SPAWN    general-purpose ...m3n4o5p6
+10:25:10  WRITE    src/middleware/auth.ts
+10:25:11  WRITE    docs/oncall-playbook.md
+10:25:12  WRITE    src/services/rate-limiter.ts
+10:25:15  WRITE    src/routes/stats.ts
 ```
 
-Different files, same timestamps. **Parallel work is real.**
+Different files, same timestamps. **Four agents, parallel work is real.**
 
 <!--
-SPEAKER: "This is the activity log, powered by hooks. Look at the timestamps — auth.ts, rate-limiter.ts, stats.ts all being written within seconds of each other. Three agents, three files, simultaneously."
+SPEAKER: "Look at the timestamps — auth.ts, the playbook, rate-limiter.ts, stats.ts all written within seconds. Four agents, four files, simultaneously. The on-call agent is writing the runbook from the spec while the feature devs write code."
 -->
 
 ---
 
-## Agents Report Back
-
-As each agent finishes, it messages the lead:
-
-> **agent-ratelimit:** Task #2 done. Created rate-limiter.ts — sliding window per sourceId. 5 tests passing. Did not touch server.ts.
-
-> **agent-stats:** Task #3 done. Added getNotificationStats to sqlite.ts, created stats route, registered in server.ts. 4 tests passing.
-
-> **agent-auth:** Task #1 done. Created auth middleware. 4 unit tests + all 5 acceptance tests passing. Did not touch server.ts.
+## Completion → Wiring → Post-Wiring
 
 ```
-21:26:30  TASK✓    #1 completed
-21:26:32  TASK✓    #2 completed
-21:26:35  TASK✓    #3 completed
-21:26:36  TASK→    #4 in_progress          ← unblocked!
-21:26:40  EDIT     src/server.ts           ← wiring the pieces together
+10:26:28  TASK✓    #4 completed    ← on-call playbook done first (no deps)
+10:26:30  TASK✓    #1 completed    ← auth
+10:26:32  TASK✓    #2 completed    ← rate limiter
+10:26:35  TASK✓    #3 completed    ← stats
+10:26:36  TASK→    #5 in_progress  ← wiring unblocks!
+10:26:40  EDIT     src/server.ts   ← auth + rate limiter wired in
+10:26:42  TASK✓    #5 completed
+10:26:43  TASK→    #6 in_progress  ← librarian unblocks
+10:26:43  TASK→    #7 in_progress  ← PO unblocks
+10:26:45  EDIT     CLAUDE.md       ← librarian updates docs
+10:26:47  WRITE    demo-artifacts/ux-spec.md  ← PO writes spec with wireframes
+10:26:50  TASK→    #8 in_progress  ← dashboard dev unblocks (PO done)
+10:26:55  EDIT     src/public/index.html      ← dev implements PO's spec
 ```
 
-Task #4 was blocked. All three dependencies resolved. Now it starts.
+The dependency chain resolves: features → wiring → docs + PO → dashboard dev.
 
 <!--
-SPEAKER: "Same as three PRs landing. Each dev says 'done, tests pass.' The integration ticket unblocks. The lead wires everything into server.ts — same as merging three PRs and resolving imports."
+SPEAKER: "Watch the cascade. The on-call playbook finishes first — it had no dependencies. Then the three features complete, wiring unblocks, and after wiring TWO tasks unblock: the librarian and the PO. Then the PO finishes and the dashboard dev starts — it reads the PO's spec and implements the changes. Same as your sprint board resolving dependencies."
+-->
+
+---
+
+## The PO→Dev Handoff
+
+The PO agent writes `demo-artifacts/ux-spec.md` — a real spec with ASCII wireframes:
+
+```
+### Auth Error State
+Before:                           After:
+┌──────────────────────┐          ┌──────────────────────┐
+│ API Key: [________]  │          │ API Key: [________]  │
+│                      │          │ ⚠ Invalid key — check │
+│ [Send]               │          │   and try again       │
+└──────────────────────┘          └──────────────────────┘
+```
+
+Then the dashboard dev reads the spec and implements the changes.
+
+**PO defines. Dev builds. Spec is the contract.** Same as your team.
+
+<!--
+SPEAKER: "The PO didn't write code — it wrote a spec with wireframes. Then a different agent read that spec and implemented it. This is the same handoff you see between your PM and your dev team. The spec is the contract, not a Slack thread."
+-->
+
+---
+
+## Cross-Model Review *(optional)*
+
+If Copilot CLI is installed, the lead gets a **second opinion** from Google and OpenAI:
+
+| Finding | Google | OpenAI | Confidence |
+|---------|--------|--------|------------|
+| Hardcoded API keys | Yes | Yes | **High** — both agree |
+| Memory leak in rate limiter | Yes | Yes | **High** — both agree |
+| Missing auth on /stats | Yes | Yes | **High** — both agree |
+| Timing attack risk | — | Yes | Human judgment |
+| No cross-process limiting | Yes | — | Human judgment |
+
+The lead **reasons over the feedback** — fixes real issues, documents why it disagrees.
+
+See `docs/examples/crossmodel-review-sample.md` for a real output.
+
+<!--
+SPEAKER: "Different models have different blind spots. Where both agree — hardcoded keys, memory leak — that's high confidence. Where they disagree, that's for you to judge. The lead doesn't blindly accept every suggestion. It reasons over them, same as you reading PR comments."
 -->
 
 ---
@@ -443,27 +477,29 @@ SPEAKER: "Hooks are how you get observability. Every tool call fires a hook. The
 
 ---
 
-## The Verdict: 46/46
+## The Verdict: All Green
 
 ```
 > npm run verify
 
  ✓ tests/templates.test.ts      (7 tests)
  ✓ tests/dedup.test.ts          (5 tests)
- ✓ tests/stats.test.ts          (4 tests)
  ✓ tests/dispatcher.test.ts     (7 tests)
- ✓ tests/acceptance.test.ts     (14 tests)    ← the human-written spec
- ✓ tests/auth.test.ts           (4 tests)
- ✓ tests/rate-limiter.test.ts   (5 tests)
+ ✓ tests/auth.test.ts           (agent-written)
+ ✓ tests/rate-limiter.test.ts   (agent-written)
+ ✓ tests/stats.test.ts          (agent-written)
+ ✓ tests/acceptance.test.ts     (27 tests)   ← the human-written spec
 
  Test Files  7 passed (7)
-      Tests  46 passed (46)
+      Tests  all passed
 ```
 
-**14 acceptance tests — written by me, untouched by agents — all green.**
+**27 acceptance tests — written by me, untouched by agents — all green.**
+
+Features work. Playbook written. Docs updated. UX spec delivered and implemented.
 
 <!--
-SPEAKER: "46 tests. 14 of those are the acceptance tests I wrote before the agents started. They didn't modify my spec — they wrote code that satisfies it. This is the quality gate. Same as your QA team signing off."
+SPEAKER: "27 acceptance tests I wrote before the agents started. They didn't modify my spec — they wrote code, a runbook, updated docs, and delivered a UX spec that satisfies it. This is the quality gate."
 -->
 
 ---
@@ -472,18 +508,19 @@ SPEAKER: "46 tests. 14 of those are the acceptance tests I wrote before the agen
 
 | | Before | After |
 |---|---|---|
-| **Test files** | 3 | 7 |
-| **Total tests** | 19 | 46 |
-| **Source files** | 8 | 11 (+ auth.ts, rate-limiter.ts, stats.ts) |
-| **Acceptance tests** | 14 failing | 14 passing |
-| **Time** | — | ~5 minutes |
-| **Lines I wrote** | the prompt + acceptance tests | — |
-| **Lines agents wrote** | — | everything else |
+| **Acceptance tests** | 27 failing | 27 passing |
+| **Source files** | 8 | 11 (+ auth, rate-limiter, stats) |
+| **Artifacts created** | 0 | 3 (playbook, ux-spec, review) |
+| **Docs updated** | — | CLAUDE.md, index.html |
+| **Agent roles** | — | dev x3, on-call, librarian, PO, dashboard dev |
+| **Time** | — | ~8 minutes |
+| **What I wrote** | prompt + acceptance tests | — |
+| **What agents wrote** | — | everything else |
 
-The dev's role: **define the spec, write the prompt, steer as your team works, verify the output.**
+Your role: **define the spec, direct the team, verify the output.**
 
 <!--
-SPEAKER: "I wrote the acceptance tests and the prompt. That's it. The agents wrote the middleware, the rate limiter, the stats endpoint, the storage query, the unit tests, the wiring. My job was to define what 'done' looks like and verify they got there."
+SPEAKER: "I wrote the acceptance tests and the prompt. The agents wrote the features, the runbook, updated the docs, reviewed the UX, and improved the dashboard. Seven distinct roles, all coordinated through task dependencies."
 -->
 
 ---
@@ -494,14 +531,17 @@ SPEAKER: "I wrote the acceptance tests and the prompt. That's it. The agents wro
 2. **One prompt** — the task brief, same as a Jira description
 3. **Task breakdown** — lead plans before anyone codes
 4. **Parallel agents in worktrees** — isolated, like feature branches
-5. **Activity hooks** — full observability into the process
-6. **Dependency resolution** — blocked tasks unblock automatically
-7. **External verification** — agents pass tests they didn't write
+5. **Multiple roles** — devs, on-call, librarian, PO, dashboard dev
+6. **PO→Dev handoff** — spec with wireframes → implementation
+7. **Cross-model review** — second opinion from competing models
+8. **Activity hooks** — full observability into the process
+9. **Dependency resolution** — blocked tasks unblock automatically
+10. **External verification** — agents pass tests they didn't write
 
 **The workflow is the same. The speed is different.**
 
 <!--
-SPEAKER: "The process maps 1:1 to how your team works. The difference is time — three agents in 5 minutes instead of three devs in a sprint."
+SPEAKER: "The process maps 1:1 to how your team works. Not just coding — operational readiness, documentation, product review, cross-role handoffs. The difference is time."
 -->
 
 ---
@@ -511,27 +551,25 @@ SPEAKER: "The process maps 1:1 to how your team works. The difference is time �
 ## Try It Yourself
 
 ```bash
-# Clone and install
-git clone <notify-service-repo-url>
-cd notify-service
-npm install
+git clone https://github.com/ktundwal/notify-service.git
+cd notify-service && npm install
 
-# Run the failing acceptance tests (the "before")
+# See the 27 failures (the "before")
 npx vitest run tests/acceptance.test.ts
 
-# Open two terminals side by side
-# Terminal 1:
-claude
+# See the dashboard (the "before" UI)
+npm run dev    # open http://localhost:3000, then Ctrl+C
 
-# Terminal 2 (observability):
-bash demo/observe.sh
+# Terminal 1: claude
+# Terminal 2: bash demo/observe.sh
+# Paste the prompt from demo/prompt.txt → watch the agents work
 
-# Paste the prompt from demo/prompt.txt
-# Watch the agents work
+# After: check demo-artifacts/ for PO spec + review output
+# Reset: bash demo/reset.sh
 ```
 
-Everything you need is in the repo: prompt, hooks, acceptance tests, reset script.
+**https://github.com/ktundwal/notify-service**
 
 <!--
-SPEAKER: "The repo has everything. Clone it, run the acceptance tests to see them fail, paste the prompt, watch the agents. The hooks are pre-configured — you'll see the activity log in real time. After the demo, run bash demo/reset.sh to start fresh."
+SPEAKER: "The repo has everything. Clone it, see the 27 failures, look at the dashboard, paste the prompt, watch the agents. After they finish, check demo-artifacts/ for the PO's UX spec and cross-model review. Reset and try again anytime."
 -->
