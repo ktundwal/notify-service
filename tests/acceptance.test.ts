@@ -319,29 +319,29 @@ describe('Acceptance: Librarian (Docs Updated)', () => {
   });
 });
 
-// ─── Product Review (UX) ────────────────────────────────────────
+// ─── Product Owner Spec ─────────────────────────────────────────
 
-describe('Acceptance: Product Review', () => {
-  let review: string;
+describe('Acceptance: Product Owner Spec', () => {
+  let spec: string;
 
   beforeEach(() => {
-    const reviewPath = path.join(process.cwd(), 'docs', 'ux-review.md');
-    review = fs.readFileSync(reviewPath, 'utf-8');
+    const specPath = path.join(process.cwd(), 'docs', 'ux-spec.md');
+    spec = fs.readFileSync(specPath, 'utf-8');
   });
 
-  it('docs/ux-review.md exists and is non-empty', () => {
-    expect(review.length).toBeGreaterThan(0);
+  it('docs/ux-spec.md exists and is non-empty', () => {
+    expect(spec.length).toBeGreaterThan(0);
   });
 
-  it('UX review covers authentication', () => {
-    expect(review).toMatch(/auth|API key|401/i);
+  it('UX spec covers authentication error states', () => {
+    expect(spec).toMatch(/auth|API key|401/i);
   });
 
-  it('UX review covers rate limiting', () => {
-    expect(review).toMatch(/rate limit|429|throttl/i);
+  it('UX spec covers rate limiting feedback', () => {
+    expect(spec).toMatch(/rate limit|429|throttl/i);
   });
 
-  it('UX review covers the stats display', () => {
-    expect(review).toMatch(/stats|dashboard|channel/i);
+  it('UX spec covers the stats display', () => {
+    expect(spec).toMatch(/stats|dashboard|channel/i);
   });
 });

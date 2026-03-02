@@ -107,7 +107,7 @@ The prompt asks Claude to:
 - A fourth agent writes an on-call playbook from the acceptance test spec
 - After all three features finish, wire everything into server.ts
 - After wiring, a librarian task updates CLAUDE.md with the new endpoints
-- After wiring, a PO agent reviews the dashboard and writes UX feedback
+- After wiring, a PO agent writes a UX spec, then a dev agent implements it
 - Definition of done: `npm run verify` passes, including the acceptance tests
 
 ### Step 4: Watch (5-8 min)
@@ -117,7 +117,7 @@ This is where you observe. Here's what happens and what to look for:
 **Phase 1 — Lead plans (~30s)**
 The lead agent reads CLAUDE.md, explores the codebase, then creates tasks.
 - Terminal 2 shows: `TASK+` lines (tasks being created)
-- Look for: 7 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers; #6 (librarian) and #7 (PO review) blocked by #4
+- Look for: 8 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers; #6 (librarian) and #7 (PO) blocked by #4; #8 (dashboard dev) blocked by #7
 
 **Phase 2 — Agents spawn (~15s)**
 Four agents start, each in its own git worktree.
@@ -134,9 +134,9 @@ As each agent finishes, it messages the lead.
 - Terminal 1 shows: completion messages with test results
 - Terminal 2 shows: `MSG` and `TASK✓` lines
 
-**Phase 5 — Integration + Docs + Review (~1-2 min)**
-Task #4 unblocks. The lead wires auth + rate limiter into server.ts. Then tasks #6 (librarian) and #7 (PO review) unblock — CLAUDE.md gets updated and the dashboard gets a UX review.
-- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `EDIT CLAUDE.md`, then `WRITE docs/ux-review.md`
+**Phase 5 — Integration + Docs + UX (~2-3 min)**
+Task #4 unblocks. The lead wires auth + rate limiter into server.ts. Then tasks #6 (librarian) and #7 (PO) unblock — CLAUDE.md gets updated and the PO writes a UX spec. Then task #8 (dashboard dev) unblocks and implements the PO's requirements.
+- Terminal 2 shows: `TASK→ #4 in_progress`, then `EDIT server.ts`, then `EDIT CLAUDE.md`, then `WRITE docs/ux-spec.md`, then `EDIT src/public/index.html`
 
 **Phase 6 — Verification (~1 min)**
 The lead runs `npm run verify`.
@@ -197,7 +197,7 @@ This reverts all file changes, removes files created by agents, and clears the a
 | Work item closed, PR merged | TaskUpdate → completed |
 | Blocked items unblock | blockedBy dependencies resolve |
 | Docs updated after feature ships | Librarian updates CLAUDE.md after wiring |
-| PO reviews the UX | PO agent writes docs/ux-review.md |
+| PO writes UX spec, dev implements | PO writes docs/ux-spec.md → dev updates index.html |
 | CI pipeline runs green | `npm run verify` passes |
 
 ### Six concepts to take away
@@ -212,7 +212,7 @@ This reverts all file changes, removes files created by agents, and clears the a
 
 5. **Docs are part of "done".** The librarian task updates CLAUDE.md after features are wired — if the API changed and the docs didn't, the work isn't finished. The acceptance tests verify that the docs reflect the current state of the code.
 
-6. **Product review = non-coding agent role.** The PO agent reviews the dashboard from a user's perspective and writes UX feedback. Agents aren't just coders — they fill any team role that can work from text artifacts.
+6. **PO→Dev handoff = cross-role collaboration.** The PO agent writes a UX spec, then a dev agent implements it. Same workflow as your product team: PO defines requirements, dev builds to spec. Agents aren't just coders — they fill any team role.
 
 ## Project Structure
 

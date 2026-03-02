@@ -14,7 +14,9 @@ After wiring is complete:
 
 5. Librarian — Update CLAUDE.md to reflect the new features. Add the auth middleware, rate limiter, and stats endpoint to the API section. Update the architecture diagram to include new files (src/middleware/auth.ts, src/services/rate-limiter.ts, src/routes/stats.ts). The docs should match the current state of the code. This task is blocked until wiring is done.
 
-6. Product review — Review the notification dashboard (src/public/index.html) from a product perspective. Check that error states are visible, the layout makes sense, and the new features (auth requirements, rate limit feedback, stats display) are represented in the UI. Write your review to docs/ux-review.md with specific observations and improvement suggestions for each feature. This task is blocked until wiring is done.
+6. Product owner — Review the notification dashboard (src/public/index.html) from a user's perspective after wiring. Write docs/ux-spec.md with specific UI improvements: what to change, why, and acceptance criteria for each change. Cover error states for auth (401), rate limiting (429), and stats display. This is the spec — not code. This task is blocked until wiring is done.
+
+7. Dashboard dev — Read docs/ux-spec.md and implement the PO's requirements in src/public/index.html. Match the acceptance criteria exactly. This task is blocked by #6 — the PO spec must exist before you start coding.
 
 Optional — cross-model review: If GitHub Copilot CLI is installed (`copilot --version`), run /crossmodel-review on src/middleware/auth.ts, src/services/rate-limiter.ts, and src/routes/stats.ts to get a second opinion from Google and OpenAI models. Reason over the feedback — fix real issues, document why you disagree with false positives. Skip this step if Copilot CLI is not available.
 
