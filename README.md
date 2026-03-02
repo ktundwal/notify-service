@@ -58,14 +58,17 @@ npx vitest run tests/acceptance.test.ts
 
 You'll see 14 failures, all saying "module not found." That's the starting line.
 
-### Step 2: Open two terminals side by side (1 min)
+### Step 2: Open three terminals side by side (1 min)
 
 ```
-┌─────────────────────────────┐  ┌─────────────────────────────┐
-│ Terminal 1: Claude Code     │  │ Terminal 2: Activity Log     │
-│ (where agents work)        │  │ (observability into process) │
-└─────────────────────────────┘  └─────────────────────────────┘
+┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐
+│ Terminal 1:            │  │ Terminal 2:            │  │ Terminal 3:            │
+│ Claude Code            │  │ Activity Log           │  │ Worktrees & Files      │
+│ (where agents work)   │  │ (observability)        │  │ (git worktree list)   │
+└───────────────────────┘  └───────────────────────┘  └───────────────────────┘
 ```
+
+Split panes in iTerm2: `Cmd+D` (vertical split), then select the rightmost pane and `Cmd+D` again.
 
 **Terminal 1:**
 ```bash
@@ -80,7 +83,13 @@ cd notify-service
 bash demo/observe.sh
 ```
 
-Terminal 2 tails the activity log. You'll see task creation, agent spawns, file edits, and messages appear in real time — powered by hooks configured in `.claude/settings.json`.
+**Terminal 3:**
+```bash
+cd notify-service
+watch -n 2 git worktree list
+```
+
+Terminal 2 tails the activity log — task creation, agent spawns, file edits, and messages in real time. Terminal 3 shows worktrees appearing as agents spawn and disappearing as they complete.
 
 ### Step 3: Paste the prompt (1 min)
 

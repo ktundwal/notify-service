@@ -1,4 +1,19 @@
 {
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write",
+      "Edit",
+      "Bash(npm run *)",
+      "Bash(npx vitest *)",
+      "Bash(mkdir *)",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(cat *)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

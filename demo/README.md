@@ -47,19 +47,20 @@ Hooks log every tool call to `agent-activity.log`. You see task creation, file e
 
 ## What the Audience Sees
 
-Two terminals side-by-side:
+Three terminals side-by-side:
 
 ```
-┌─────────────────────────────┐  ┌─────────────────────────────┐
-│ Terminal 1: Claude Code     │  │ Terminal 2: Activity Log     │
-│                             │  │                              │
-│ The "standup" — what the    │  │ The "CI dashboard" — what's  │
-│ team is doing right now     │  │ happening under the hood     │
-│                             │  │                              │
-│ Shows: agent spawns,        │  │ Shows: task lifecycle,       │
-│ messages, task status,      │  │ file edits, agent spawns,    │
-│ Claude's thinking           │  │ messages — timestamped       │
-└─────────────────────────────┘  └─────────────────────────────┘
+┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐
+│ Terminal 1:            │  │ Terminal 2:            │  │ Terminal 3:            │
+│ Claude Code            │  │ Activity Log           │  │ Worktrees & Files      │
+│                        │  │                        │  │                        │
+│ The "standup" — what   │  │ The "CI dashboard" —   │  │ The "branch view" —    │
+│ the team is doing now  │  │ what's happening under │  │ watch worktrees appear │
+│                        │  │ the hood               │  │ as agents spawn        │
+│ Shows: agent spawns,   │  │ Shows: task lifecycle,  │  │                        │
+│ messages, task status  │  │ file edits, timestamps │  │ Shows: git worktree    │
+│                        │  │                        │  │ list refreshing live   │
+└───────────────────────┘  └───────────────────────┘  └───────────────────────┘
 ```
 
 ---
@@ -87,6 +88,15 @@ claude
 cd C:/github/notify-service
 bash demo/observe.sh
 ```
+
+### Terminal 3: Worktree Watcher
+
+```bash
+cd C:/github/notify-service
+watch -n 2 git worktree list
+```
+
+Shows worktrees appearing as agents spawn and disappearing as they complete. Visual proof of "each dev gets their own branch."
 
 ### Verify hooks are active
 
@@ -205,6 +215,8 @@ modify acceptance.test.ts.
 ```
 
 **Say:** "Three agents spawned, each in its own git worktree — an isolated copy of the repo on its own branch. Same as three devs, each working on a feature branch. They can't clobber each other's files."
+
+**Terminal 3:** Point to the worktree watcher — it now shows 4 entries (main + 3 agent worktrees). "See — three new worktrees just appeared. Each agent has its own copy of the repo."
 
 **Teaching point:** Worktrees = feature branches. Each agent gets a full, independent working directory. When they're done, changes merge back. This is how real teams avoid merge conflicts.
 
