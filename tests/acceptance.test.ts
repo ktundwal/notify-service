@@ -15,6 +15,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import request from 'supertest';
 import { initDb, closeDb, insertNotification } from '../src/storage/sqlite';
@@ -249,5 +251,43 @@ describe('Acceptance: Stats Endpoint', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.total).toBe(0);
+  });
+});
+
+// ─── On-Call Playbook ────────────────────────────────────────────
+
+describe('Acceptance: On-Call Playbook', () => {
+  let playbook: string;
+
+  beforeEach(() => {
+    const playbookPath = path.join(process.cwd(), 'docs', 'oncall-playbook.md');
+    playbook = fs.readFileSync(playbookPath, 'utf-8');
+  });
+
+  it('docs/oncall-playbook.md exists and is non-empty', () => {
+    expect(playbook.length).toBeGreaterThan(0);
+  });
+
+  it('contains a section for auth middleware mentioning 401 and X-API-Key', () => {
+    expect(playbook).toMatch(/auth/i);
+    expect(playbook).toMatch(/401/);
+    expect(playbook).toMatch(/X-API-Key/i);
+  });
+
+  it('contains a section for rate limiter mentioning 429 and Retry-After', () => {
+    expect(playbook).toMatch(/rate limit/i);
+    expect(playbook).toMatch(/429/);
+    expect(playbook).toMatch(/Retry-After/i);
+  });
+
+  it('contains a section for stats endpoint mentioning GET /stats and channels', () => {
+    expect(playbook).toMatch(/stats/i);
+    expect(playbook).toMatch(/GET \/stats/);
+    expect(playbook).toMatch(/channel/i);
+  });
+
+  it('contains diagnostic or troubleshooting guidance for each feature', () => {
+    const hasDiagnostics = /diagnos|troubleshoot|debug|investigat|check|verify/i.test(playbook);
+    expect(hasDiagnostics).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-Add three features to this notification service. Create a team of 3 agents to work in parallel. Each agent should work in its own git worktree to avoid conflicts.
+Add three features and an operational playbook to this notification service. Create a team of 4 agents to work in parallel. Each agent should work in its own git worktree to avoid conflicts.
 
 1. Auth middleware — Create src/middleware/auth.ts. Validate an X-API-Key header on all /webhooks routes. Valid keys: ["notify-dev-key", "notify-prod-key"]. Return 401 JSON error for missing or invalid keys. Write unit tests in tests/auth.test.ts.
 
@@ -6,6 +6,8 @@ Add three features to this notification service. Create a team of 3 agents to wo
 
 3. Stats endpoint — Create src/routes/stats.ts. GET /stats returns notification counts grouped by channel and priority for the last hour. Add a getNotificationStats(sinceMinutes) function to src/storage/sqlite.ts. Register the route in server.ts. Write unit tests in tests/stats.test.ts.
 
-After all three features are implemented, wire the auth middleware and rate limiter into server.ts.
+4. On-call playbook — Create docs/oncall-playbook.md. Read tests/acceptance.test.ts to understand the three features being built. For each feature (auth middleware, rate limiter, stats endpoint), write a runbook entry with: what it does, success/error responses, how to diagnose failures, and rollback steps. This is the on-call engineer's reference — write it from the API contract, not from implementation.
+
+After all three features are implemented, wire the auth middleware and rate limiter into server.ts. The on-call playbook runs in parallel with the feature work — it doesn't depend on the feature agents and they don't depend on it.
 
 Definition of done: run npm run verify — type check AND all tests must pass, including tests/acceptance.test.ts which contains pre-written acceptance tests that validate the exact behavior specified above. Do not modify acceptance.test.ts.

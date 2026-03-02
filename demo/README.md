@@ -21,7 +21,7 @@ Claude Code agent teams do the exact same thing. This demo makes that visible.
 
 ---
 
-## Three Concepts Beyond "Give It a Prompt"
+## Four Concepts Beyond "Give It a Prompt"
 
 ### 1. Acceptance Tests = External Quality Gate
 
@@ -42,6 +42,12 @@ With worktrees (`isolation: "worktree"` on the Agent tool), each agent gets a **
 Hooks log every tool call to `agent-activity.log`. You see task creation, file edits, agent messages — all timestamped. It's the "CI dashboard" view into the team's work.
 
 **Human parallel:** Your team's Slack channel + CI pipeline + Jira board, combined into one stream.
+
+### 4. Operational Artifacts = On-Call Readiness
+
+The on-call agent reads the acceptance tests — the spec — and writes a runbook (`docs/oncall-playbook.md`) from the contract. It doesn't wait for the feature code. Same as your on-call engineer reading the Jira ticket and updating the playbook before the feature even ships.
+
+**Human parallel:** Your on-call writes runbook entries from acceptance criteria, not from implementation details.
 
 ---
 
@@ -121,7 +127,7 @@ Before you paste the prompt, show the audience the acceptance test file:
 > Read tests/acceptance.test.ts and tell me what it expects
 ```
 
-Claude will summarize: "14 acceptance tests that check auth middleware rejects bad keys, rate limiter returns 429, and stats endpoint groups by channel/priority."
+Claude will summarize: "19 acceptance tests that check auth middleware rejects bad keys, rate limiter returns 429, stats endpoint groups by channel/priority, and on-call playbook documents all three features."
 
 **Say:** "These tests were written by me, not the agents. This is the spec — same as acceptance criteria in a Jira ticket. The agents can't modify this file. They have to write code that makes it pass."
 
@@ -131,7 +137,7 @@ Then run the acceptance tests to show they fail:
 > Run npx vitest run tests/acceptance.test.ts
 ```
 
-**Say:** "14 failures. All saying 'module not found' — the code doesn't exist yet. The agents' job is to make these pass."
+**Say:** "19 failures. The code doesn't exist yet. The agents' job is to make these pass."
 
 ---
 
@@ -194,43 +200,47 @@ modify acceptance.test.ts.
 17:44:01  TASK+    Add rate limiter — sliding window per sourceId
 17:44:01  TASK+    Add stats endpoint — counts by channel and priority
 17:44:02  TASK+    Wire auth + rate limiter into server.ts
+17:44:02  TASK+    Write on-call playbook from acceptance test spec
 17:44:02  TASK→    #1 in_progress → agent-auth
 17:44:02  TASK→    #2 in_progress → agent-ratelimit
 17:44:02  TASK→    #3 in_progress → agent-stats
+17:44:02  TASK→    #5 in_progress → agent-oncall
 ```
 
-**Say:** "It broke the work into tasks. Three features, three agents, one wiring task that's blocked until all three are done. That's a dependency graph — same as your sprint board."
+**Say:** "It broke the work into 5 tasks. Three features, one wiring task blocked until features are done, and an on-call playbook that runs in parallel — no blockers. That's a dependency graph — same as your sprint board."
 
-**Teaching point:** The lead doesn't start coding — it plans first, creates the task board, then delegates.
+**Teaching point:** The lead doesn't start coding — it plans first, creates the task board, then delegates. The on-call task has no dependencies — it reads the spec, not the implementation.
 
 ---
 
 ### Phase 3: Agent Spawn + Worktrees (1:00 – 1:15)
 
-**What Claude does:** Spawns 3 agents, each in their own git worktree.
+**What Claude does:** Spawns 4 agents, each in their own git worktree.
 
 **Activity log shows:**
 ```
 17:44:03  SPAWN    general-purpose ...a1b2c3d4
 17:44:03  SPAWN    general-purpose ...e5f6g7h8
 17:44:04  SPAWN    general-purpose ...i9j0k1l2
+17:44:04  SPAWN    general-purpose ...m3n4o5p6
 ```
 
-**Say:** "Three agents spawned, each in its own git worktree — an isolated copy of the repo on its own branch. Same as three devs, each working on a feature branch. They can't clobber each other's files."
+**Say:** "Four agents spawned, each in its own git worktree. Three for features, one for the on-call playbook. Same as your team — three devs on features and an on-call engineer writing the runbook."
 
-**Terminal 3:** Point to the worktree watcher — it now shows 4 entries (main + 3 agent worktrees). "See — three new worktrees just appeared. Each agent has its own copy of the repo."
+**Terminal 3:** Point to the worktree watcher — it now shows 5 entries (main + 4 agent worktrees). "See — four new worktrees just appeared. Each agent has its own copy of the repo."
 
-**Teaching point:** Worktrees = feature branches. Each agent gets a full, independent working directory. When they're done, changes merge back. This is how real teams avoid merge conflicts.
+**Teaching point:** Worktrees = feature branches. Each agent gets a full, independent working directory. When they're done, changes merge back. The on-call agent is already reading the acceptance tests — the spec — and writing the runbook from the contract.
 
 ---
 
 ### Phase 4: Parallel Work (1:15 – 3:00)
 
-**What Claude does:** Agents read existing files, create new modules, write implementations and tests.
+**What Claude does:** Agents read existing files, create new modules, write implementations and tests. The on-call agent reads `tests/acceptance.test.ts` and writes `docs/oncall-playbook.md`.
 
 **Activity log shows:**
 ```
 17:44:10  WRITE    src/middleware/auth.ts
+17:44:11  WRITE    docs/oncall-playbook.md
 17:44:12  WRITE    src/services/rate-limiter.ts
 17:44:13  EDIT     src/storage/sqlite.ts
 17:44:15  WRITE    src/routes/stats.ts
@@ -239,7 +249,7 @@ modify acceptance.test.ts.
 17:44:25  WRITE    tests/stats.test.ts
 ```
 
-**Say:** "All three working simultaneously. Look at the log — different files, same timestamps. auth.ts, rate-limiter.ts, stats.ts written in parallel. In human terms: three devs, three PRs, zero coordination overhead."
+**Say:** "All four working simultaneously. Look at the log — different files, same timestamps. auth.ts, rate-limiter.ts, stats.ts, and the on-call playbook written in parallel. The on-call agent is reading the acceptance tests — the spec — and writing the runbook from the contract. Same as your on-call engineer reading the Jira ticket and updating the playbook before the feature even ships."
 
 **If agents communicate:**
 ```
@@ -256,6 +266,7 @@ modify acceptance.test.ts.
 
 **Activity log shows:**
 ```
+17:44:28  TASK✓    #5 completed
 17:44:30  TASK✓    #1 completed
 17:44:32  TASK✓    #2 completed
 17:44:35  TASK✓    #3 completed
@@ -263,7 +274,7 @@ modify acceptance.test.ts.
 17:44:40  EDIT     src/server.ts
 ```
 
-**Say:** "All three features done. The wiring task just unblocked. Now it's integrating into server.ts — importing the middleware, mounting the routes. This is the merge step."
+**Say:** "Notice the on-call playbook finished first — it had no dependencies, just reading the spec and writing docs. All three features done. The wiring task just unblocked. Now it's integrating into server.ts — importing the middleware, mounting the routes. This is the merge step."
 
 ---
 
@@ -276,7 +287,7 @@ modify acceptance.test.ts.
 17:44:45  BASH     Run verification: tsc + vitest
 ```
 
-**Say:** "Definition of done. Type check passes, their unit tests pass, AND the acceptance tests I wrote pass. 14 acceptance tests that I wrote before the agents started. They didn't modify the spec — they wrote code that satisfies it. Same as your QA team signing off."
+**Say:** "Definition of done. Type check passes, their unit tests pass, AND the acceptance tests I wrote pass. 19 acceptance tests that I wrote before the agents started — including 5 that verify the on-call playbook. They didn't modify the spec — they wrote code and docs that satisfy it. Same as your QA team signing off."
 
 ---
 
@@ -288,7 +299,8 @@ modify acceptance.test.ts.
 | Lead creates Jira tickets | TaskCreate → task list |
 | Lead assigns parallel work | TaskUpdate with owner → agents |
 | Each dev gets a feature branch | Each agent gets a git worktree |
-| 3 devs work simultaneously | 3 agents editing different files |
+| 3 devs + 1 on-call work simultaneously | 4 agents editing different files |
+| On-call writes runbook from ticket | On-call agent writes playbook from acceptance tests |
 | Dev posts in team channel | SendMessage → lead |
 | Acceptance criteria in ticket | tests/acceptance.test.ts (human-written) |
 | Ticket closed, PR merged | TaskUpdate → completed, worktree merged |

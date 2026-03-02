@@ -2,7 +2,7 @@
 
 A hands-on exercise that teaches how Claude Code agent teams work — by showing they work exactly like human engineering teams.
 
-You'll give a team of 3 AI agents a real feature request, watch them break it down, work in parallel on isolated branches, communicate, and ship — while you observe every step through an activity log.
+You'll give a team of 4 AI agents a real feature request, watch them break it down, work in parallel on isolated branches, communicate, and ship — while you observe every step through an activity log.
 
 ## Prerequisites
 
@@ -42,7 +42,7 @@ Three features need to be added:
 
 ### What makes this interesting
 
-You won't write the code. You'll direct a team of 3 agents to build it — using the same workflow your engineering team uses: task breakdown, parallel work, isolated branches, acceptance criteria, and CI verification.
+You won't write the code. You'll direct a team of 4 agents to build it — using the same workflow your engineering team uses: task breakdown, parallel work, isolated branches, acceptance criteria, and CI verification.
 
 ## Step-by-Step
 
@@ -54,11 +54,11 @@ Before agents touch anything, look at the acceptance tests — the spec you're g
 # Read the acceptance test file
 cat tests/acceptance.test.ts
 
-# Run them — all 14 should fail (the code doesn't exist yet)
+# Run them — all 19 should fail (the code doesn't exist yet)
 npx vitest run tests/acceptance.test.ts
 ```
 
-You'll see 14 failures, all saying "module not found." That's the starting line.
+You'll see 19 failures. That's the starting line.
 
 ### Step 2: Open three terminals side by side (1 min)
 
@@ -100,10 +100,11 @@ Terminal 2 tails the activity log — task creation, agent spawns, file edits, a
 Copy the contents of `demo/prompt.txt` and paste it into Claude Code (Terminal 1).
 
 The prompt asks Claude to:
-- Create a team of 3 agents
+- Create a team of 4 agents
 - Each agent works in its own git worktree (isolated branch)
-- Each builds one feature with unit tests
-- After all three finish, wire everything into server.ts
+- Three agents build one feature each with unit tests
+- A fourth agent writes an on-call playbook from the acceptance test spec
+- After all three features finish, wire everything into server.ts
 - Definition of done: `npm run verify` passes, including the acceptance tests
 
 ### Step 4: Watch (5-8 min)
@@ -113,17 +114,17 @@ This is where you observe. Here's what happens and what to look for:
 **Phase 1 — Lead plans (~30s)**
 The lead agent reads CLAUDE.md, explores the codebase, then creates tasks.
 - Terminal 2 shows: `TASK+` lines (tasks being created)
-- Look for: 4 tasks, where task #4 is blocked by #1, #2, #3
+- Look for: 5 tasks — #4 (wiring) blocked by #1, #2, #3; #5 (on-call playbook) has no blockers
 
 **Phase 2 — Agents spawn (~15s)**
-Three agents start, each in its own git worktree.
+Four agents start, each in its own git worktree.
 - Terminal 2 shows: `SPAWN` lines
-- Look for: 3 separate agents, each assigned to a task
+- Look for: 4 separate agents — 3 for features, 1 for the on-call playbook
 
 **Phase 3 — Parallel work (~2 min)**
-All three agents work simultaneously on different files.
+All four agents work simultaneously on different files.
 - Terminal 2 shows: `WRITE` and `EDIT` lines with close timestamps
-- Look for: auth.ts, rate-limiter.ts, stats.ts being written at the same time
+- Look for: auth.ts, rate-limiter.ts, stats.ts, and `docs/oncall-playbook.md` being written at the same time
 
 **Phase 4 — Agents report back (~30s)**
 As each agent finishes, it messages the lead.
@@ -136,7 +137,7 @@ Task #4 unblocks. The lead wires auth + rate limiter into server.ts.
 
 **Phase 6 — Verification (~1 min)**
 The lead runs `npm run verify`.
-- Terminal 1 shows: 46/46 tests passing (including your 14 acceptance tests)
+- Terminal 1 shows: all tests passing (including your 19 acceptance tests)
 - Terminal 2 shows: `BASH` line for the verify command
 
 ### Step 5: Inspect the results
@@ -166,7 +167,7 @@ To go back to the starting state and run the exercise again:
 bash demo/reset.sh
 ```
 
-This reverts all file changes, removes files created by agents, and clears the activity log. You're back to 19 tests, 14 failing acceptance tests, ready to go again.
+This reverts all file changes, removes files created by agents, and clears the activity log. You're back to 19 tests, 19 failing acceptance tests, ready to go again.
 
 ## What to Notice
 
@@ -178,14 +179,15 @@ This reverts all file changes, removes files created by agents, and clears the a
 | Lead creates ADO items | TaskCreate → task list |
 | Lead assigns to devs | TaskUpdate with owner |
 | Each dev gets a feature branch | Each agent gets a git worktree |
-| 3 devs work simultaneously | 3 agents write different files |
+| 3 devs work simultaneously | 4 agents write different files |
+| On-call writes runbook from ticket | On-call agent writes playbook from acceptance tests |
 | Dev posts in team channel | SendMessage → lead |
 | Acceptance criteria in ADO item | tests/acceptance.test.ts |
 | Work item closed, PR merged | TaskUpdate → completed |
 | Blocked items unblock | blockedBy dependencies resolve |
 | CI pipeline runs green | `npm run verify` passes |
 
-### Three concepts to take away
+### Four concepts to take away
 
 1. **Acceptance tests = external quality gate.** Agents write their own unit tests (grading their own homework). The acceptance tests are YOUR spec — agents can't modify them, only satisfy them.
 
@@ -193,10 +195,14 @@ This reverts all file changes, removes files created by agents, and clears the a
 
 3. **Hooks = observability.** The activity log isn't magic — it's a shell script that runs on every tool call. You can customize what gets logged, add alerts, or pipe to any monitoring system.
 
+4. **Operational artifacts = on-call readiness.** The on-call agent reads the spec (acceptance tests) and writes a runbook — same as your on-call engineer documenting expected behavior before code ships. Operational readiness is part of development, not an afterthought.
+
 ## Project Structure
 
 ```
 notify-service/
+├── docs/
+│   └── oncall-playbook.md      ← on-call runbook (written by agent)
 ├── src/                        ← the application code
 │   ├── server.ts
 │   ├── types/index.ts
@@ -204,7 +210,7 @@ notify-service/
 │   ├── services/
 │   └── storage/
 ├── tests/
-│   ├── acceptance.test.ts      ← YOUR spec (14 tests, do not modify)
+│   ├── acceptance.test.ts      ← YOUR spec (19 tests, do not modify)
 │   ├── templates.test.ts       ← existing unit tests
 │   ├── dedup.test.ts
 │   └── dispatcher.test.ts
